@@ -84,36 +84,36 @@
 
 #### 前端技術
 
-| 技術 | 版本 | 用途 |
-|------|------|------|
-| Vue.js | 3.5.13 | 前端框架 (Composition API) |
-| Vite | 6.3.5 | 建置工具與開發伺服器 |
-| Vue Router | 4.5.1 | 路由管理 |
-| Pinia | Latest | 狀態管理（計畫中） |
-| Tailwind CSS | Latest | UI 樣式框架 |
-| Axios | Latest | HTTP 客戶端 |
-| VueUse | Latest | Composition API 工具集（計畫中） |
-| Chart.js | Latest | 圖表視覺化（報表模組） |
+| 技術         | 版本   | 用途                             |
+| ------------ | ------ | -------------------------------- |
+| Vue.js       | 3.5.13 | 前端框架 (Composition API)       |
+| Vite         | 6.3.5  | 建置工具與開發伺服器             |
+| Vue Router   | 4.5.1  | 路由管理                         |
+| Pinia        | Latest | 狀態管理（計畫中）               |
+| Tailwind CSS | Latest | UI 樣式框架                      |
+| Axios        | Latest | HTTP 客戶端                      |
+| VueUse       | Latest | Composition API 工具集（計畫中） |
+| Chart.js     | Latest | 圖表視覺化（報表模組）           |
 
 #### 後端技術
 
-| 技術 | 版本 | 用途 |
-|------|------|------|
-| Laravel | 11.x | 後端框架 |
-| PHP | 8.2 | 程式語言 |
-| PostgreSQL | 16 Alpine | 主要資料庫 |
-| Laravel Sanctum | Latest | API 認證 |
-| Laravel Excel | Latest | Excel 匯入匯出 |
-| Spatie Permission | Latest | 角色權限管理 |
+| 技術              | 版本      | 用途           |
+| ----------------- | --------- | -------------- |
+| Laravel           | 11.x      | 後端框架       |
+| PHP               | 8.2       | 程式語言       |
+| PostgreSQL        | 16 Alpine | 主要資料庫     |
+| Laravel Sanctum   | Latest    | API 認證       |
+| Laravel Excel     | Latest    | Excel 匯入匯出 |
+| Spatie Permission | Latest    | 角色權限管理   |
 
 #### 基礎設施
 
-| 技術 | 版本 | 用途 |
-|------|------|------|
-| Docker | Latest | 容器化 |
-| Docker Compose | v2.0+ | 多容器編排 |
-| Nginx | Latest | Web 伺服器 |
-| pgAdmin | 4 | 資料庫管理工具 |
+| 技術           | 版本   | 用途           |
+| -------------- | ------ | -------------- |
+| Docker         | Latest | 容器化         |
+| Docker Compose | v2.0+  | 多容器編排     |
+| Nginx          | Latest | Web 伺服器     |
+| pgAdmin        | 4      | 資料庫管理工具 |
 
 ---
 
@@ -419,205 +419,205 @@ backend/
 
 **users (員工/使用者表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| name | VARCHAR(100) | 姓名 | |
-| email | VARCHAR(255) | Email | UNIQUE |
-| password | VARCHAR(255) | 密碼（加密） | |
-| phone | VARCHAR(20) | 電話 | |
-| department | VARCHAR(50) | 部門 | INDEX |
-| position | VARCHAR(50) | 職位 | |
-| status | ENUM | 狀態（active/inactive） | |
-| created_at | TIMESTAMP | 建立時間 | |
-| updated_at | TIMESTAMP | 更新時間 | |
+| 欄位       | 型別         | 說明                    | 索引   |
+| ---------- | ------------ | ----------------------- | ------ |
+| id         | BIGINT       | 主鍵                    | PK     |
+| name       | VARCHAR(100) | 姓名                    |        |
+| email      | VARCHAR(255) | Email                   | UNIQUE |
+| password   | VARCHAR(255) | 密碼（加密）            |        |
+| phone      | VARCHAR(20)  | 電話                    |        |
+| department | VARCHAR(50)  | 部門                    | INDEX  |
+| position   | VARCHAR(50)  | 職位                    |        |
+| status     | ENUM         | 狀態（active/inactive） |        |
+| created_at | TIMESTAMP    | 建立時間                |        |
+| updated_at | TIMESTAMP    | 更新時間                |        |
 
 **roles (角色表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| name | VARCHAR(50) | 角色名稱 | UNIQUE |
-| display_name | VARCHAR(100) | 顯示名稱 | |
-| description | TEXT | 描述 | |
-| created_at | TIMESTAMP | 建立時間 | |
-| updated_at | TIMESTAMP | 更新時間 | |
+| 欄位         | 型別         | 說明     | 索引   |
+| ------------ | ------------ | -------- | ------ |
+| id           | BIGINT       | 主鍵     | PK     |
+| name         | VARCHAR(50)  | 角色名稱 | UNIQUE |
+| display_name | VARCHAR(100) | 顯示名稱 |        |
+| description  | TEXT         | 描述     |        |
+| created_at   | TIMESTAMP    | 建立時間 |        |
+| updated_at   | TIMESTAMP    | 更新時間 |        |
 
 **permissions (權限表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| name | VARCHAR(50) | 權限名稱 | UNIQUE |
-| display_name | VARCHAR(100) | 顯示名稱 | |
-| module | VARCHAR(30) | 所屬模組 | INDEX |
-| created_at | TIMESTAMP | 建立時間 | |
-| updated_at | TIMESTAMP | 更新時間 | |
+| 欄位         | 型別         | 說明     | 索引   |
+| ------------ | ------------ | -------- | ------ |
+| id           | BIGINT       | 主鍵     | PK     |
+| name         | VARCHAR(50)  | 權限名稱 | UNIQUE |
+| display_name | VARCHAR(100) | 顯示名稱 |        |
+| module       | VARCHAR(30)  | 所屬模組 | INDEX  |
+| created_at   | TIMESTAMP    | 建立時間 |        |
+| updated_at   | TIMESTAMP    | 更新時間 |        |
 
 **role_user (角色-使用者關聯表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
+| 欄位    | 型別   | 說明      | 索引      |
+| ------- | ------ | --------- | --------- |
+| id      | BIGINT | 主鍵      | PK        |
 | user_id | BIGINT | 使用者 ID | FK, INDEX |
-| role_id | BIGINT | 角色 ID | FK, INDEX |
+| role_id | BIGINT | 角色 ID   | FK, INDEX |
 
 **permission_role (權限-角色關聯表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
+| 欄位          | 型別   | 說明    | 索引      |
+| ------------- | ------ | ------- | --------- |
+| id            | BIGINT | 主鍵    | PK        |
 | permission_id | BIGINT | 權限 ID | FK, INDEX |
-| role_id | BIGINT | 角色 ID | FK, INDEX |
+| role_id       | BIGINT | 角色 ID | FK, INDEX |
 
 #### 2. 報價單相關
 
 **quotes (報價單表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| quote_no | VARCHAR(50) | 報價單號 | UNIQUE |
-| customer_id | BIGINT | 客戶 ID | FK, INDEX |
-| user_id | BIGINT | 負責業務 | FK, INDEX |
-| title | VARCHAR(200) | 標題 | |
-| description | TEXT | 說明 | |
-| subtotal | DECIMAL(12,2) | 小計 | |
-| tax | DECIMAL(12,2) | 稅額 | |
-| discount | DECIMAL(12,2) | 折扣 | |
-| total | DECIMAL(12,2) | 總計 | INDEX |
-| status | ENUM | 狀態（draft/sent/approved/rejected） | INDEX |
-| valid_until | DATE | 有效期限 | |
-| created_at | TIMESTAMP | 建立時間 | INDEX |
-| updated_at | TIMESTAMP | 更新時間 | |
+| 欄位        | 型別          | 說明                                 | 索引      |
+| ----------- | ------------- | ------------------------------------ | --------- |
+| id          | BIGINT        | 主鍵                                 | PK        |
+| quote_no    | VARCHAR(50)   | 報價單號                             | UNIQUE    |
+| customer_id | BIGINT        | 客戶 ID                              | FK, INDEX |
+| user_id     | BIGINT        | 負責業務                             | FK, INDEX |
+| title       | VARCHAR(200)  | 標題                                 |           |
+| description | TEXT          | 說明                                 |           |
+| subtotal    | DECIMAL(12,2) | 小計                                 |           |
+| tax         | DECIMAL(12,2) | 稅額                                 |           |
+| discount    | DECIMAL(12,2) | 折扣                                 |           |
+| total       | DECIMAL(12,2) | 總計                                 | INDEX     |
+| status      | ENUM          | 狀態（draft/sent/approved/rejected） | INDEX     |
+| valid_until | DATE          | 有效期限                             |           |
+| created_at  | TIMESTAMP     | 建立時間                             | INDEX     |
+| updated_at  | TIMESTAMP     | 更新時間                             |           |
 
 **quote_items (報價項目表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| quote_id | BIGINT | 報價單 ID | FK, INDEX |
-| product_id | BIGINT | 商品 ID（可為 NULL） | FK |
-| template_id | BIGINT | 範本 ID（可為 NULL） | FK |
-| name | VARCHAR(200) | 項目名稱 | |
-| description | TEXT | 說明 | |
-| quantity | INT | 數量 | |
-| unit_price | DECIMAL(12,2) | 單價 | |
-| amount | DECIMAL(12,2) | 金額 | |
-| sort_order | INT | 排序 | |
-| created_at | TIMESTAMP | 建立時間 | |
-| updated_at | TIMESTAMP | 更新時間 | |
+| 欄位        | 型別          | 說明                 | 索引      |
+| ----------- | ------------- | -------------------- | --------- |
+| id          | BIGINT        | 主鍵                 | PK        |
+| quote_id    | BIGINT        | 報價單 ID            | FK, INDEX |
+| product_id  | BIGINT        | 商品 ID（可為 NULL） | FK        |
+| template_id | BIGINT        | 範本 ID（可為 NULL） | FK        |
+| name        | VARCHAR(200)  | 項目名稱             |           |
+| description | TEXT          | 說明                 |           |
+| quantity    | INT           | 數量                 |           |
+| unit_price  | DECIMAL(12,2) | 單價                 |           |
+| amount      | DECIMAL(12,2) | 金額                 |           |
+| sort_order  | INT           | 排序                 |           |
+| created_at  | TIMESTAMP     | 建立時間             |           |
+| updated_at  | TIMESTAMP     | 更新時間             |           |
 
 **templates (報價範本表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| name | VARCHAR(100) | 範本名稱 | INDEX |
-| category | VARCHAR(50) | 分類 | INDEX |
-| fields | JSON | 自定義欄位 | |
-| created_at | TIMESTAMP | 建立時間 | |
-| updated_at | TIMESTAMP | 更新時間 | |
+| 欄位       | 型別         | 說明       | 索引  |
+| ---------- | ------------ | ---------- | ----- |
+| id         | BIGINT       | 主鍵       | PK    |
+| name       | VARCHAR(100) | 範本名稱   | INDEX |
+| category   | VARCHAR(50)  | 分類       | INDEX |
+| fields     | JSON         | 自定義欄位 |       |
+| created_at | TIMESTAMP    | 建立時間   |       |
+| updated_at | TIMESTAMP    | 更新時間   |       |
 
 #### 3. 客戶管理相關
 
 **customers (客戶表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| customer_no | VARCHAR(50) | 客戶編號 | UNIQUE |
-| name | VARCHAR(200) | 公司名稱 | INDEX |
-| contact_person | VARCHAR(100) | 聯絡人 | |
-| phone | VARCHAR(20) | 電話 | |
-| email | VARCHAR(255) | Email | INDEX |
-| address | TEXT | 地址 | |
-| tax_id | VARCHAR(20) | 統一編號 | INDEX |
-| industry | VARCHAR(50) | 產業類別 | INDEX |
-| source | VARCHAR(30) | 客戶來源 | INDEX |
-| level | ENUM | 客戶等級（A/B/C/D） | INDEX |
-| status | ENUM | 狀態（active/inactive） | INDEX |
-| assigned_to | BIGINT | 負責業務 | FK, INDEX |
-| created_at | TIMESTAMP | 建立時間 | INDEX |
-| updated_at | TIMESTAMP | 更新時間 | |
+| 欄位           | 型別         | 說明                    | 索引      |
+| -------------- | ------------ | ----------------------- | --------- |
+| id             | BIGINT       | 主鍵                    | PK        |
+| customer_no    | VARCHAR(50)  | 客戶編號                | UNIQUE    |
+| name           | VARCHAR(200) | 公司名稱                | INDEX     |
+| contact_person | VARCHAR(100) | 聯絡人                  |           |
+| phone          | VARCHAR(20)  | 電話                    |           |
+| email          | VARCHAR(255) | Email                   | INDEX     |
+| address        | TEXT         | 地址                    |           |
+| tax_id         | VARCHAR(20)  | 統一編號                | INDEX     |
+| industry       | VARCHAR(50)  | 產業類別                | INDEX     |
+| source         | VARCHAR(30)  | 客戶來源                | INDEX     |
+| level          | ENUM         | 客戶等級（A/B/C/D）     | INDEX     |
+| status         | ENUM         | 狀態（active/inactive） | INDEX     |
+| assigned_to    | BIGINT       | 負責業務                | FK, INDEX |
+| created_at     | TIMESTAMP    | 建立時間                | INDEX     |
+| updated_at     | TIMESTAMP    | 更新時間                |           |
 
 **contacts (聯絡記錄表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| customer_id | BIGINT | 客戶 ID | FK, INDEX |
-| user_id | BIGINT | 聯絡人（員工） | FK, INDEX |
-| type | ENUM | 類型（phone/email/visit/meeting） | INDEX |
-| subject | VARCHAR(200) | 主旨 | |
-| content | TEXT | 內容 | |
-| next_action | TEXT | 下次行動 | |
-| contact_date | DATETIME | 聯絡時間 | INDEX |
-| created_at | TIMESTAMP | 建立時間 | |
-| updated_at | TIMESTAMP | 更新時間 | |
+| 欄位         | 型別         | 說明                              | 索引      |
+| ------------ | ------------ | --------------------------------- | --------- |
+| id           | BIGINT       | 主鍵                              | PK        |
+| customer_id  | BIGINT       | 客戶 ID                           | FK, INDEX |
+| user_id      | BIGINT       | 聯絡人（員工）                    | FK, INDEX |
+| type         | ENUM         | 類型（phone/email/visit/meeting） | INDEX     |
+| subject      | VARCHAR(200) | 主旨                              |           |
+| content      | TEXT         | 內容                              |           |
+| next_action  | TEXT         | 下次行動                          |           |
+| contact_date | DATETIME     | 聯絡時間                          | INDEX     |
+| created_at   | TIMESTAMP    | 建立時間                          |           |
+| updated_at   | TIMESTAMP    | 更新時間                          |           |
 
 **opportunities (商機表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| customer_id | BIGINT | 客戶 ID | FK, INDEX |
-| user_id | BIGINT | 負責業務 | FK, INDEX |
-| title | VARCHAR(200) | 商機名稱 | |
-| amount | DECIMAL(12,2) | 預估金額 | INDEX |
-| probability | INT | 成交機率（%） | |
-| stage | ENUM | 階段（prospect/negotiation/proposal/closing） | INDEX |
-| expected_close_date | DATE | 預計成交日 | INDEX |
-| status | ENUM | 狀態（open/won/lost） | INDEX |
-| created_at | TIMESTAMP | 建立時間 | INDEX |
-| updated_at | TIMESTAMP | 更新時間 | |
+| 欄位                | 型別          | 說明                                          | 索引      |
+| ------------------- | ------------- | --------------------------------------------- | --------- |
+| id                  | BIGINT        | 主鍵                                          | PK        |
+| customer_id         | BIGINT        | 客戶 ID                                       | FK, INDEX |
+| user_id             | BIGINT        | 負責業務                                      | FK, INDEX |
+| title               | VARCHAR(200)  | 商機名稱                                      |           |
+| amount              | DECIMAL(12,2) | 預估金額                                      | INDEX     |
+| probability         | INT           | 成交機率（%）                                 |           |
+| stage               | ENUM          | 階段（prospect/negotiation/proposal/closing） | INDEX     |
+| expected_close_date | DATE          | 預計成交日                                    | INDEX     |
+| status              | ENUM          | 狀態（open/won/lost）                         | INDEX     |
+| created_at          | TIMESTAMP     | 建立時間                                      | INDEX     |
+| updated_at          | TIMESTAMP     | 更新時間                                      |           |
 
 #### 4. 進銷存相關
 
 **products (商品表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| product_no | VARCHAR(50) | 商品編號 | UNIQUE, INDEX |
-| name | VARCHAR(200) | 商品名稱 | INDEX |
-| category | VARCHAR(50) | 分類 | INDEX |
-| unit | VARCHAR(20) | 單位 | |
-| cost_price | DECIMAL(12,2) | 成本價 | |
-| sell_price | DECIMAL(12,2) | 售價 | |
-| description | TEXT | 說明 | |
-| status | ENUM | 狀態（active/discontinued） | INDEX |
-| created_at | TIMESTAMP | 建立時間 | |
-| updated_at | TIMESTAMP | 更新時間 | |
+| 欄位        | 型別          | 說明                        | 索引          |
+| ----------- | ------------- | --------------------------- | ------------- |
+| id          | BIGINT        | 主鍵                        | PK            |
+| product_no  | VARCHAR(50)   | 商品編號                    | UNIQUE, INDEX |
+| name        | VARCHAR(200)  | 商品名稱                    | INDEX         |
+| category    | VARCHAR(50)   | 分類                        | INDEX         |
+| unit        | VARCHAR(20)   | 單位                        |               |
+| cost_price  | DECIMAL(12,2) | 成本價                      |               |
+| sell_price  | DECIMAL(12,2) | 售價                        |               |
+| description | TEXT          | 說明                        |               |
+| status      | ENUM          | 狀態（active/discontinued） | INDEX         |
+| created_at  | TIMESTAMP     | 建立時間                    |               |
+| updated_at  | TIMESTAMP     | 更新時間                    |               |
 
 **stocks (庫存表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| product_id | BIGINT | 商品 ID | FK, INDEX |
-| warehouse | VARCHAR(50) | 倉庫位置 | INDEX |
-| quantity | INT | 數量 | |
-| safety_stock | INT | 安全庫存 | |
-| updated_at | TIMESTAMP | 更新時間 | |
+| 欄位         | 型別        | 說明     | 索引      |
+| ------------ | ----------- | -------- | --------- |
+| id           | BIGINT      | 主鍵     | PK        |
+| product_id   | BIGINT      | 商品 ID  | FK, INDEX |
+| warehouse    | VARCHAR(50) | 倉庫位置 | INDEX     |
+| quantity     | INT         | 數量     |           |
+| safety_stock | INT         | 安全庫存 |           |
+| updated_at   | TIMESTAMP   | 更新時間 |           |
 
 **transactions (進銷記錄表)**
 
-| 欄位 | 型別 | 說明 | 索引 |
-|------|------|------|------|
-| id | BIGINT | 主鍵 | PK |
-| transaction_no | VARCHAR(50) | 單據編號 | UNIQUE |
-| product_id | BIGINT | 商品 ID | FK, INDEX |
-| type | ENUM | 類型（in/out/adjust） | INDEX |
-| quantity | INT | 數量 | |
-| unit_price | DECIMAL(12,2) | 單價 | |
-| amount | DECIMAL(12,2) | 金額 | |
-| warehouse | VARCHAR(50) | 倉庫 | INDEX |
-| reference_no | VARCHAR(50) | 參考單號 | INDEX |
-| note | TEXT | 備註 | |
-| user_id | BIGINT | 操作人員 | FK, INDEX |
-| transaction_date | DATE | 交易日期 | INDEX |
-| created_at | TIMESTAMP | 建立時間 | |
+| 欄位             | 型別          | 說明                  | 索引      |
+| ---------------- | ------------- | --------------------- | --------- |
+| id               | BIGINT        | 主鍵                  | PK        |
+| transaction_no   | VARCHAR(50)   | 單據編號              | UNIQUE    |
+| product_id       | BIGINT        | 商品 ID               | FK, INDEX |
+| type             | ENUM          | 類型（in/out/adjust） | INDEX     |
+| quantity         | INT           | 數量                  |           |
+| unit_price       | DECIMAL(12,2) | 單價                  |           |
+| amount           | DECIMAL(12,2) | 金額                  |           |
+| warehouse        | VARCHAR(50)   | 倉庫                  | INDEX     |
+| reference_no     | VARCHAR(50)   | 參考單號              | INDEX     |
+| note             | TEXT          | 備註                  |           |
+| user_id          | BIGINT        | 操作人員              | FK, INDEX |
+| transaction_date | DATE          | 交易日期              | INDEX     |
+| created_at       | TIMESTAMP     | 建立時間              |           |
 
 ---
 
@@ -743,11 +743,13 @@ GET    /api/reports/customer        # 客戶報表
 **目標**: 建立完整的認證系統與 API 基礎
 
 - [ ] **環境設定** (1 天)
+
   - [x] Docker 環境建置完成
-  - [ ] PostgreSQL 資料庫連線測試
+  - [x] PostgreSQL 資料庫連線測試
   - [ ] Laravel 基本配置確認
 
 - [ ] **認證系統** (3-4 天)
+
   - [ ] Laravel Sanctum 安裝與配置
   - [ ] User Model 與 Migration
   - [ ] 登入/登出 API
@@ -755,6 +757,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] 密碼重設功能
 
 - [ ] **權限系統** (3-4 天)
+
   - [ ] 安裝 Spatie Permission 套件
   - [ ] 角色與權限資料表設計
   - [ ] RBAC 中介層實作
@@ -769,6 +772,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] API 測試環境建立
 
 **預期產出**:
+
 - ✅ 可運作的登入/登出功能
 - ✅ 完整的角色權限控制
 - ✅ API 回應格式標準化
@@ -778,6 +782,7 @@ GET    /api/reports/customer        # 客戶報表
 **目標**: 重構為模組化架構，建立共用元件庫
 
 - [ ] **專案重構** (3-4 天)
+
   - [ ] 建立模組化目錄結構
   - [ ] 安裝 Pinia 狀態管理
   - [ ] 設定 Vue Router（模組化路由）
@@ -785,6 +790,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] 環境變數設定（.env）
 
 - [ ] **認證模組** (2-3 天)
+
   - [ ] 登入頁面
   - [ ] Auth Store (Pinia)
   - [ ] Token 管理
@@ -792,6 +798,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] 401/403 錯誤處理
 
 - [ ] **共用元件庫** (3-4 天)
+
   - [ ] Button 元件
   - [ ] Input 元件
   - [ ] Select 元件
@@ -808,6 +815,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] 響應式設計調整
 
 **預期產出**:
+
 - ✅ 模組化的專案結構
 - ✅ 完整的登入/登出流程
 - ✅ 可重用的共用元件庫
@@ -822,6 +830,7 @@ GET    /api/reports/customer        # 客戶報表
 **目標**: 將報價單功能從 LocalStorage 遷移至後端資料庫
 
 - [ ] **資料表設計** (1-2 天)
+
   - [ ] quotes 資料表 Migration
   - [ ] quote_items 資料表 Migration
   - [ ] templates 資料表 Migration
@@ -829,6 +838,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] 索引優化
 
 - [ ] **Model 開發** (2 天)
+
   - [ ] Quote Model（含關聯）
   - [ ] QuoteItem Model
   - [ ] Template Model
@@ -836,6 +846,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] Model Observer（事件監聽）
 
 - [ ] **API 控制器** (4-5 天)
+
   - [ ] QuoteController (CRUD)
   - [ ] TemplateController (CRUD)
   - [ ] PDF 匯出功能
@@ -850,6 +861,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] 權限控制（只能查看自己的報價單）
 
 **預期產出**:
+
 - ✅ 完整的報價單 RESTful API
 - ✅ PDF/Excel 匯出功能
 - ✅ 報價單狀態管理
@@ -859,17 +871,20 @@ GET    /api/reports/customer        # 客戶報表
 **目標**: 重構現有報價單功能，整合後端 API
 
 - [ ] **資料遷移** (1 天)
+
   - [ ] LocalStorage → API 遷移工具
   - [ ] 資料格式轉換
   - [ ] 匯入功能測試
 
 - [ ] **API 整合** (2-3 天)
+
   - [ ] quoteApi.js（API 呼叫封裝）
   - [ ] useQuote.js（Composable）
   - [ ] quoteStore.js（Pinia Store，可選）
   - [ ] 錯誤處理
 
 - [ ] **頁面重構** (5-6 天)
+
   - [ ] QuoteList.vue（列表頁）
     - 搜尋、篩選、排序
     - 分頁功能
@@ -893,6 +908,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] QuoteStatusBadge.vue
 
 **預期產出**:
+
 - ✅ 完全整合後端 API 的報價單模組
 - ✅ 多人協作功能
 - ✅ 更好的使用者體驗
@@ -904,11 +920,13 @@ GET    /api/reports/customer        # 客戶報表
 #### 3.1 後端開發
 
 - [ ] **資料表設計** (1-2 天)
+
   - [ ] customers 資料表
   - [ ] contacts 資料表
   - [ ] opportunities 資料表
 
 - [ ] **Model & Controller** (4-5 天)
+
   - [ ] Customer Model & Controller
   - [ ] Contact Model & Controller
   - [ ] Opportunity Model & Controller
@@ -921,6 +939,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] 聯絡歷程時間軸
 
 **預期產出**:
+
 - ✅ 完整的客戶管理 API
 - ✅ 聯絡歷程追蹤
 - ✅ 商機管理功能
@@ -928,6 +947,7 @@ GET    /api/reports/customer        # 客戶報表
 #### 3.2 前端開發
 
 - [ ] **頁面開發** (6-7 天)
+
   - [ ] CustomerList.vue
   - [ ] CustomerDetail.vue
   - [ ] ContactHistory.vue
@@ -940,6 +960,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] CustomerLevelBadge.vue
 
 **預期產出**:
+
 - ✅ 完整的客戶管理介面
 - ✅ 視覺化的聯絡時間軸
 - ✅ 商機看板
@@ -951,11 +972,13 @@ GET    /api/reports/customer        # 客戶報表
 #### 4.1 後端開發
 
 - [ ] **資料表設計** (1-2 天)
+
   - [ ] products 資料表
   - [ ] stocks 資料表
   - [ ] transactions 資料表
 
 - [ ] **Model & Controller** (4-5 天)
+
   - [ ] Product Model & Controller
   - [ ] Stock Model & Controller
   - [ ] Transaction Model & Controller
@@ -967,6 +990,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] 批次進貨/出貨
 
 **預期產出**:
+
 - ✅ 完整的進銷存 API
 - ✅ 自動化庫存管理
 - ✅ 庫存警報系統
@@ -974,6 +998,7 @@ GET    /api/reports/customer        # 客戶報表
 #### 4.2 前端開發
 
 - [ ] **頁面開發** (6-7 天)
+
   - [ ] ProductList.vue
   - [ ] ProductCreate.vue
   - [ ] StockIn.vue（進貨）
@@ -987,6 +1012,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] StockAlert.vue
 
 **預期產出**:
+
 - ✅ 直覺的進銷存操作介面
 - ✅ 即時庫存查詢
 - ✅ 庫存報表
@@ -998,6 +1024,7 @@ GET    /api/reports/customer        # 客戶報表
 #### 5.1 後端開發
 
 - [ ] **擴展認證系統** (2-3 天)
+
   - [ ] 員工資料欄位擴充
   - [ ] 部門管理
   - [ ] 員工狀態管理
@@ -1008,12 +1035,14 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] 權限繼承邏輯
 
 **預期產出**:
+
 - ✅ 完整的員工管理 API
 - ✅ 彈性的權限控制
 
 #### 5.2 前端開發
 
 - [ ] **頁面開發** (4-5 天)
+
   - [ ] StaffList.vue
   - [ ] StaffDetail.vue
   - [ ] RoleManage.vue
@@ -1025,6 +1054,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] PermissionTree.vue
 
 **預期產出**:
+
 - ✅ 員工管理介面
 - ✅ 視覺化權限矩陣
 - ✅ 彈性的角色配置
@@ -1043,18 +1073,21 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] 查詢效能優化
 
 **預期產出**:
+
 - ✅ 多維度報表查詢 API
 - ✅ 優化的查詢效能
 
 #### 6.2 前端開發
 
 - [ ] **圖表元件** (2-3 天)
+
   - [ ] LineChart.vue
   - [ ] BarChart.vue
   - [ ] PieChart.vue
   - [ ] 整合 Chart.js
 
 - [ ] **頁面開發** (5-6 天)
+
   - [ ] Dashboard.vue（儀表板）
   - [ ] SalesReport.vue
   - [ ] InventoryReport.vue
@@ -1066,6 +1099,7 @@ GET    /api/reports/customer        # 客戶報表
   - [ ] 報表匯出（PDF/Excel）
 
 **預期產出**:
+
 - ✅ 視覺化儀表板
 - ✅ 多維度報表分析
 - ✅ 互動式資料探索
@@ -1077,11 +1111,13 @@ GET    /api/reports/customer        # 客戶報表
 ### 後端測試
 
 **單元測試**
+
 - Model 方法測試
 - Service 邏輯測試
 - 驗證規則測試
 
 **功能測試**
+
 - API 端點測試
 - 認證流程測試
 - 權限控制測試
@@ -1091,14 +1127,17 @@ GET    /api/reports/customer        # 客戶報表
 ### 前端測試
 
 **單元測試（Vitest）**
+
 - Composable 函式測試
 - 工具函式測試
 
 **元件測試（Vue Test Utils）**
+
 - 共用元件測試
 - 表單驗證測試
 
 **E2E 測試（Cypress，可選）**
+
 - 關鍵使用者流程測試
 
 ---
@@ -1108,11 +1147,13 @@ GET    /api/reports/customer        # 客戶報表
 ### 後端優化
 
 1. **資料庫優化**
+
    - 合理索引設計
    - 查詢語句優化
    - N+1 問題處理（Eager Loading）
 
 2. **快取策略**
+
    - Redis 快取（Phase 2 後導入）
    - API 回應快取
    - 查詢結果快取
@@ -1125,11 +1166,13 @@ GET    /api/reports/customer        # 客戶報表
 ### 前端優化
 
 1. **打包優化**
+
    - 程式碼分割（Code Splitting）
    - 懶加載（Lazy Loading）
    - Tree Shaking
 
 2. **渲染優化**
+
    - 虛擬滾動（長列表）
    - 防抖/節流
    - Memo 化
@@ -1197,15 +1240,15 @@ test: 新增報價單單元測試
 
 ## 📅 時程規劃總覽
 
-| 階段 | 功能 | 預估時間 | 目標完成日 |
-|------|------|----------|-----------|
-| Phase 1 | 基礎建設 | 2-3 週 | Week 3 |
-| Phase 2 | 報價單升級 | 3-4 週 | Week 7 |
-| Phase 3 | 客戶管理 | 3-4 週 | Week 11 |
-| Phase 4 | 進銷存 | 3-4 週 | Week 15 |
-| Phase 5 | 員工管理 | 2-3 週 | Week 18 |
-| Phase 6 | 報表中心 | 3-4 週 | Week 22 |
-| **總計** | | **16-22 週** | **約 5-6 個月** |
+| 階段     | 功能       | 預估時間     | 目標完成日      |
+| -------- | ---------- | ------------ | --------------- |
+| Phase 1  | 基礎建設   | 2-3 週       | Week 3          |
+| Phase 2  | 報價單升級 | 3-4 週       | Week 7          |
+| Phase 3  | 客戶管理   | 3-4 週       | Week 11         |
+| Phase 4  | 進銷存     | 3-4 週       | Week 15         |
+| Phase 5  | 員工管理   | 2-3 週       | Week 18         |
+| Phase 6  | 報表中心   | 3-4 週       | Week 22         |
+| **總計** |            | **16-22 週** | **約 5-6 個月** |
 
 ---
 

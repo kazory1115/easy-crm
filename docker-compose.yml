@@ -8,7 +8,7 @@ services:
     restart: always
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./www:/var/www/html
+      - ./:/var/www/html
     ports:
       - '${NGINX_PORT:-8080}:80'
     depends_on:
@@ -32,7 +32,7 @@ services:
     container_name: easy-crm-php
     restart: always
     volumes:
-      - ./www:/var/www/html
+      - ./:/var/www/html
       - ./backend:/var/www/html/backend
     environment:
       - DB_CONNECTION=${DB_CONNECTION:-pgsql}
@@ -69,7 +69,11 @@ services:
     networks:
       - easy-crm-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_DATABASE:-easy_crm_db}"]
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_DATABASE:-easy_crm_db}',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -94,7 +98,11 @@ services:
     networks:
       - easy-crm-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_TEST_USERNAME:-postgres} -d ${DB_TEST_DATABASE:-easy_crm_test}"]
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${DB_TEST_USERNAME:-postgres} -d ${DB_TEST_DATABASE:-easy_crm_test}',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -119,7 +127,11 @@ services:
     networks:
       - easy-crm-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_ECIC_USERNAME:-postgres} -d ${DB_ECIC_DATABASE:-easy_crm_ecic}"]
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${DB_ECIC_USERNAME:-postgres} -d ${DB_ECIC_DATABASE:-easy_crm_ecic}',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
