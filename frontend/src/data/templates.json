@@ -1,0 +1,20 @@
+[
+  {
+    "id": "tpl-001",
+    "name": "網站主機",
+    "fields": [
+      { "id": "field-01", "label": "CPU 核心數", "value": "8 Cores" },
+      { "id": "field-02", "label": "記憶體", "value": "16GB DDR4" },
+      { "id": "field-03", "label": "系統碟", "value": "512GB SSD" },
+      { "id": "field-04", "label": "資料碟", "value": "2TB HDD" }
+    ]
+  },
+  {
+    "id": "tpl-002",
+    "name": "防火牆",
+    "fields": [
+      { "id": "field-01", "label": "吞吐量", "value": "1 Gbps" },
+      { "id": "field-02", "label": "最大連線數", "value": "500,000" }
+    ]
+  }
+]

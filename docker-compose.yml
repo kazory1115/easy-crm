@@ -1,0 +1,81 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./www:/var/www/html
+    ports:
+      - '8080:80' # 改為 80，讓 nginx 處理主頁面
+    depends_on:
+      - php
+
+  php:
+    build: . # 使用當前目錄的 Dockerfile 來構建映像
+    container_name: php
+    restart: always
+    volumes:
+      - ./www:/var/www/html
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:10.11.7
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234 # 請更改此密碼
+      MYSQL_DATABASE: localhostDB # 確保這裡有設定
+      TZ: Asia/Taipei
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - '3306:3306'
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone=+08:00
+      
+    
+  mariadb_test:
+    image: mariadb:10.11.7
+    container_name: mariadb_test
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234 # 請更改此密碼
+      MYSQL_DATABASE: localhost_test # 確保這裡有設定
+    volumes:
+      - mariadb_test_data:/var/lib/mysql
+    ports:
+      - '3308:3306'
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+
+  mariadbEcic:
+    image: mariadb:10.11.7
+    container_name: mariadbEcic
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234 # 請更改此密碼
+      MYSQL_DATABASE: localhostEcic # 確保這裡有設定
+    volumes:
+      - mariadbEcic_data:/var/lib/mysql
+    ports:
+      - '3307:3306'
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: root
+      PMA_PASSWORD: 1234 # 需與上方設定的 root 密碼一致
+    ports:
+      - '8081:80'
+    depends_on:
+      - mariadb
+
+volumes:
+  mariadb_data:
+  mariadbEcic_data:
+  mariadb_test_data:

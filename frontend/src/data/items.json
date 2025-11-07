@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "type": "drop",
+    "name": "選單1",
+    "quantity": 1,
+    "unit": "kg",
+    "price": 100
+  },
+  {
+    "id": 2,
+    "type": "drop",
+    "name": "選單2",
+    "quantity": 2,
+    "unit": "kg",
+    "price": 200
+  },
+  {
+    "id": 3,
+    "type": "drop",
+    "name": "選單3",
+    "quantity": 3,
+    "unit": "kg",
+    "price": 300
+  }
+]
