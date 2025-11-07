@@ -32,13 +32,13 @@ Easy CRM 是一個基於 **Vue 3 + Laravel + PostgreSQL** 的全功能企業客�
 
 ### ✨ 核心功能
 
-| 模組 | 功能描述 | 狀態 |
-|------|----------|------|
-| 🧾 **報價單 (Quote)** | 自定義範本、動態欄位、匯出 Word/PDF | ✅ 已完成 (v2.0) |
-| 📦 **進銷存 (Inventory)** | 商品管理、庫存追蹤、進銷記錄 | 🔲 規劃中 |
-| 👥 **客戶管理 (CRM)** | 客戶資料、聯絡歷程、商機管理 | 🔲 規劃中 |
-| 👔 **員工管理 (Staff)** | 組織架構、角色權限、績效追蹤 | 🔲 規劃中 |
-| 📊 **報表中心 (Report)** | 銷售報表、庫存報表、自定義報表 | 🔲 規劃中 |
+| 模組                      | 功能描述                            | 狀態             |
+| ------------------------- | ----------------------------------- | ---------------- |
+| 🧾 **報價單 (Quote)**     | 自定義範本、動態欄位、匯出 Word/PDF | ✅ 已完成 (v2.0) |
+| 📦 **進銷存 (Inventory)** | 商品管理、庫存追蹤、進銷記錄        | 🔲 規劃中        |
+| 👥 **客戶管理 (CRM)**     | 客戶資料、聯絡歷程、商機管理        | 🔲 規劃中        |
+| 👔 **員工管理 (Staff)**   | 組織架構、角色權限、績效追蹤        | 🔲 規劃中        |
+| 📊 **報表中心 (Report)**  | 銷售報表、庫存報表、自定義報表      | 🔲 規劃中        |
 
 ### 🎯 技術亮點
 
@@ -64,7 +64,7 @@ Easy CRM 是一個基於 **Vue 3 + Laravel + PostgreSQL** 的全功能企業客�
 
 ### 後端技術棧
 
-- **框架**: Laravel 11.x
+- **框架**: Laravel 12.x
 - **資料庫**: PostgreSQL 16 Alpine
 - **API 風格**: RESTful API
 - **認證**: Laravel Sanctum
@@ -303,21 +303,25 @@ easy-crm/
 ### ⚠️ 重要提醒
 
 1. **絕對不要提交 `.env` 檔案到版本控制**
+
    - `.gitignore` 已設定忽略所有 `.env` 檔案
    - 確認：`git status` 不應顯示 `.env`
 
 2. **使用強密碼**
+
    - 至少 16 個字元
    - 包含大小寫字母、數字、特殊符號
    - 不要在多個服務使用相同密碼
 
 3. **生產環境設定**
+
    ```bash
    APP_ENV=production
    APP_DEBUG=false
    ```
 
 4. **定期更新依賴**
+
    ```bash
    # 更新 Composer 套件
    docker-compose exec php composer update
@@ -344,10 +348,12 @@ DB_EXTERNAL_PORT=5435
 ```
 
 然後重啟服務：
+
 ```bash
 docker-compose down
 docker-compose up -d
 ```
+
 </details>
 
 <details>
@@ -363,6 +369,7 @@ docker-compose logs
 docker-compose down -v
 docker-compose up -d --build
 ```
+
 </details>
 
 <details>
@@ -385,6 +392,7 @@ docker-compose up -d --build
 ```bash
 docker-compose exec php php /var/www/html/backend/artisan key:generate
 ```
+
 </details>
 
 ---
@@ -403,11 +411,13 @@ docker-compose exec php php /var/www/html/backend/artisan key:generate
 ### v3.0.0 (規劃中) - CRM 核心功能
 
 - [ ] 基礎架構重構
+
   - [ ] 前端模組化架構實作
   - [ ] 後端 API 基礎建設
   - [ ] 認證授權系統（Laravel Sanctum）
 
 - [ ] 報價單模組升級
+
   - [ ] LocalStorage → API 遷移
   - [ ] 多人協作功能
   - [ ] 版本控制

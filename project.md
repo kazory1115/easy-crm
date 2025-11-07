@@ -55,7 +55,7 @@
                          │
                          ▼
 ┌──────────────────────────────────────────────────────────┐
-│         後端層 (Laravel 11 + PHP 8.2-FPM)                │
+│         後端層 (Laravel 12 + PHP 8.2-FPM)                │
 │  ┌──────────────────────────────────────────────────┐   │
 │  │           RESTful API Controllers                │   │
 │  │  /api/quotes  /api/customers  /api/products ...  │   │
