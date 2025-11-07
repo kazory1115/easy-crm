@@ -1,81 +1,169 @@
 services:
+  # ==========================================
+  # Nginx Web Server
+  # ==========================================
   nginx:
     image: nginx:latest
-    container_name: nginx
+    container_name: easy-crm-nginx
     restart: always
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./www:/var/www/html
     ports:
-      - '8080:80' # 改為 80，讓 nginx 處理主頁面
+      - '${NGINX_PORT:-8080}:80'
     depends_on:
       - php
+    networks:
+      - easy-crm-network
+    environment:
+      - TZ=${TIMEZONE:-Asia/Taipei}
 
+  # ==========================================
+  # PHP-FPM Application Server
+  # ==========================================
   php:
-    build: . # 使用當前目錄的 Dockerfile 來構建映像
-    container_name: php
+    build:
+      context: .
+      args:
+        TIMEZONE: ${TIMEZONE:-Asia/Taipei}
+        PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-256M}
+        PHP_UPLOAD_MAX_FILESIZE: ${PHP_UPLOAD_MAX_FILESIZE:-20M}
+        PHP_POST_MAX_SIZE: ${PHP_POST_MAX_SIZE:-20M}
+    container_name: easy-crm-php
     restart: always
     volumes:
       - ./www:/var/www/html
+      - ./backend:/var/www/html/backend
+    environment:
+      - DB_CONNECTION=${DB_CONNECTION:-pgsql}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_DATABASE=${DB_DATABASE:-easy_crm_db}
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - TZ=${TIMEZONE:-Asia/Taipei}
     depends_on:
-      - mariadb
+      - postgres
+      - postgres_test
+      - postgres_ecic
+    networks:
+      - easy-crm-network
 
-  mariadb:
-    image: mariadb:10.11.7
-    container_name: mariadb
+  # ==========================================
+  # PostgreSQL - 主資料庫
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: easy-crm-postgres
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 1234 # 請更改此密碼
-      MYSQL_DATABASE: localhostDB # 確保這裡有設定
-      TZ: Asia/Taipei
+      POSTGRES_DB: ${DB_DATABASE:-easy_crm_db}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: ${TIMEZONE:-Asia/Taipei}
+      PGTZ: ${TIMEZONE:-Asia/Taipei}
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - '3306:3306'
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone=+08:00
-      
-    
-  mariadb_test:
-    image: mariadb:10.11.7
-    container_name: mariadb_test
+      - '${DB_EXTERNAL_PORT:-5432}:5432'
+    networks:
+      - easy-crm-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_DATABASE:-easy_crm_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # PostgreSQL - 測試資料庫
+  # ==========================================
+  postgres_test:
+    image: postgres:16-alpine
+    container_name: easy-crm-postgres-test
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 1234 # 請更改此密碼
-      MYSQL_DATABASE: localhost_test # 確保這裡有設定
+      POSTGRES_DB: ${DB_TEST_DATABASE:-easy_crm_test}
+      POSTGRES_USER: ${DB_TEST_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_TEST_PASSWORD}
+      TZ: ${TIMEZONE:-Asia/Taipei}
+      PGTZ: ${TIMEZONE:-Asia/Taipei}
     volumes:
-      - mariadb_test_data:/var/lib/mysql
+      - postgres_test_data:/var/lib/postgresql/data
     ports:
-      - '3308:3306'
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      - '${DB_TEST_EXTERNAL_PORT:-5433}:5432'
+    networks:
+      - easy-crm-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_TEST_USERNAME:-postgres} -d ${DB_TEST_DATABASE:-easy_crm_test}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-
-  mariadbEcic:
-    image: mariadb:10.11.7
-    container_name: mariadbEcic
+  # ==========================================
+  # PostgreSQL - ECIC 資料庫
+  # ==========================================
+  postgres_ecic:
+    image: postgres:16-alpine
+    container_name: easy-crm-postgres-ecic
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 1234 # 請更改此密碼
-      MYSQL_DATABASE: localhostEcic # 確保這裡有設定
+      POSTGRES_DB: ${DB_ECIC_DATABASE:-easy_crm_ecic}
+      POSTGRES_USER: ${DB_ECIC_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_ECIC_PASSWORD}
+      TZ: ${TIMEZONE:-Asia/Taipei}
+      PGTZ: ${TIMEZONE:-Asia/Taipei}
     volumes:
-      - mariadbEcic_data:/var/lib/mysql
+      - postgres_ecic_data:/var/lib/postgresql/data
     ports:
-      - '3307:3306'
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      - '${DB_ECIC_EXTERNAL_PORT:-5434}:5432'
+    networks:
+      - easy-crm-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_ECIC_USERNAME:-postgres} -d ${DB_ECIC_DATABASE:-easy_crm_ecic}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  phpmyadmin:
-    image: phpmyadmin:latest
-    container_name: phpmyadmin
+  # ==========================================
+  # pgAdmin - PostgreSQL 管理工具
+  # ==========================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: easy-crm-pgadmin
     restart: always
     environment:
-      PMA_HOST: mariadb
-      PMA_USER: root
-      PMA_PASSWORD: 1234 # 需與上方設定的 root 密碼一致
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@easyCRM.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      TZ: ${TIMEZONE:-Asia/Taipei}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
     ports:
-      - '8081:80'
+      - '${PGADMIN_PORT:-5050}:80'
     depends_on:
-      - mariadb
+      - postgres
+      - postgres_test
+      - postgres_ecic
+    networks:
+      - easy-crm-network
 
+# ==========================================
+# Networks
+# ==========================================
+networks:
+  easy-crm-network:
+    driver: bridge
+    name: easy-crm-network
+
+# ==========================================
+# Volumes
+# ==========================================
 volumes:
-  mariadb_data:
-  mariadbEcic_data:
-  mariadb_test_data:
+  postgres_data:
+    name: easy-crm-postgres-data
+  postgres_test_data:
+    name: easy-crm-postgres-test-data
+  postgres_ecic_data:
+    name: easy-crm-postgres-ecic-data
+  pgadmin_data:
+    name: easy-crm-pgadmin-data

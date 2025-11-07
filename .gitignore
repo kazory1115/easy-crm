@@ -1,0 +1,72 @@
+# ===========================================
+# Easy CRM - Git 忽略檔案設定
+# ===========================================
+
+# ------------------------------------
+# 環境變數檔案（包含敏感資料）
+# ------------------------------------
+.env
+.env.local
+.env.*.local
+
+# 保留範本檔案
+!.env.example
+
+# ------------------------------------
+# Laravel Backend
+# ------------------------------------
+backend/.env
+backend/vendor/
+backend/node_modules/
+backend/storage/*.key
+backend/storage/logs/*.log
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+
+# 保留 backend 範本
+!backend/.env.example
+
+# ------------------------------------
+# Frontend
+# ------------------------------------
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ------------------------------------
+# Docker
+# ------------------------------------
+docker-compose.override.yml
+
+# ------------------------------------
+# IDE / 編輯器
+# ------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ------------------------------------
+# 作業系統
+# ------------------------------------
+Thumbs.db
+.DS_Store
+
+# ------------------------------------
+# 日誌與臨時檔案
+# ------------------------------------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ------------------------------------
+# 其他
+# ------------------------------------
+*.sql
+*.sqlite
+*.sqlite3
