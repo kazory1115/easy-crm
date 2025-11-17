@@ -496,10 +496,10 @@ function selectRowData(id, event, type) {
   let data, selectedItem;
   if (type === 'drop') {
     data = itemDatas.value;
-    selectedItem = data.find((item) => item.id == selectedValue);
+    selectedItem = data.find((item) => item.id === Number(selectedValue));
   } else if (type === 'template') {
     data = templateDatas.value;
-    selectedItem = data.find((item) => item.id == selectedValue);
+    selectedItem = data.find((item) => item.id === selectedValue);
   }
 
   if (!selectedItem) return;

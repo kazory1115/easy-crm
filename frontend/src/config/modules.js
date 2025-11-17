@@ -54,7 +54,30 @@ export const moduleConfig = {
         '匯出 Word/PDF',
         '歷史記錄'
       ]
-    }
+    },
+    children: [
+      {
+        id: 'quote-create',
+        name: '新增報價單',
+        path: '/quote/create',
+        icon: '➕',
+        permission: 'quote.create'
+      },
+      {
+        id: 'quote-list',
+        name: '歷史紀錄',
+        path: '/quote/list',
+        icon: '📜',
+        permission: 'quote.view'
+      },
+      {
+        id: 'quote-templates',
+        name: '範本管理',
+        path: '/quote/templates',
+        icon: '📋',
+        permission: 'quote.template.manage'
+      }
+    ]
   },
 
   // 👥 客戶管理模組

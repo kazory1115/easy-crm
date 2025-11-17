@@ -62,7 +62,8 @@ export const useAppStore = defineStore('app', () => {
       icon: module.icon,
       path: module.path,
       badge: module.meta?.badge,
-      color: module.meta?.color
+      color: module.meta?.color,
+      children: module.children || null
     }))
   })
 

@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-100">
     <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
+    <header class="bg-white shadow-sm sticky top-0 z-40">
       <div class="flex items-center justify-between px-4 py-3">
         <!-- Logo & Toggle -->
         <div class="flex items-center space-x-4">
@@ -35,11 +35,33 @@
           </button>
 
           <!-- User Menu -->
-          <div class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 rounded-lg p-2">
-            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-              {{ userInitial }}
-            </div>
-            <span class="text-sm font-medium text-gray-700">{{ displayName }}</span>
+          <div class="relative">
+            <button @click="toggleUserMenu" class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 rounded-lg p-2">
+              <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                {{ userInitial }}
+              </div>
+              <span class="text-sm font-medium text-gray-700">{{ displayName }}</span>
+              <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <transition
+              enter-active-class="transition ease-out duration-100"
+              enter-from-class="transform opacity-0 scale-95"
+              enter-to-class="transform opacity-100 scale-100"
+              leave-active-class="transition ease-in duration-75"
+              leave-from-class="transform opacity-100 scale-100"
+              leave-to-class="transform opacity-0 scale-95"
+            >
+              <div v-if="isUserMenuOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
+                <div class="px-4 py-2 text-sm text-gray-700 border-b">
+                  <p class="font-semibold">{{ displayName }}</p>
+                  <p class="truncate text-gray-500">{{ userEmail }}</p>
+                </div>
+                <router-link to="/profile" @click="isUserMenuOpen = false" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">個人資料</router-link>
+                <a href="#" @click.prevent="handleLogout" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">登出</a>
+              </div>
+            </transition>
           </div>
         </div>
       </div>
@@ -50,22 +72,25 @@
       <aside
         :class="[
           'bg-white shadow-lg transition-all duration-300 ease-in-out',
-          sidebarCollapsed ? 'w-16' : 'w-64'
+          sidebarCollapsed ? 'w-20' : 'w-64'
         ]"
-        class="min-h-[calc(100vh-64px)] sticky top-16"
+        class="min-h-[calc(100vh-64px)] sticky top-16 z-30"
       >
         <nav class="py-4">
           <ul class="space-y-1 px-2">
             <li v-for="item in menuItems" :key="item.id">
+              <!-- Item with no children -->
               <router-link
+                v-if="!item.children"
                 :to="item.path"
                 class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors hover:bg-gray-100"
                 :class="{
                   'bg-blue-50 text-blue-600': isActive(item.path),
                   'text-gray-700': !isActive(item.path)
                 }"
+                :title="sidebarCollapsed ? item.name : ''"
               >
-                <span class="text-2xl">{{ item.icon }}</span>
+                <span class="text-2xl w-8 text-center">{{ item.icon }}</span>
                 <span v-if="!sidebarCollapsed" class="font-medium">{{ item.name }}</span>
                 <span
                   v-if="item.badge && !sidebarCollapsed"
@@ -75,6 +100,48 @@
                   {{ item.badge }}
                 </span>
               </router-link>
+
+              <!-- Item with children -->
+              <div v-else>
+                <button
+                  @click="toggleSubMenu(item.id)"
+                  class="w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition-colors hover:bg-gray-100"
+                  :class="{
+                    'bg-blue-50 text-blue-600': isActive(item.path),
+                    'text-gray-700': !isActive(item.path)
+                  }"
+                >
+                  <div class="flex items-center space-x-3">
+                    <span class="text-2xl w-8 text-center">{{ item.icon }}</span>
+                    <span v-if="!sidebarCollapsed" class="font-medium">{{ item.name }}</span>
+                  </div>
+                  <svg
+                    v-if="!sidebarCollapsed"
+                    class="w-5 h-5 transition-transform"
+                    :class="{ 'rotate-180': isSubMenuOpen(item.id) }"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+                <ul v-if="isSubMenuOpen(item.id) && !sidebarCollapsed" class="mt-1 space-y-1 pl-8 pr-2">
+                  <template v-for="child in item.children" :key="child.id">
+                    <li v-if="!child.permission || authStore.hasPermission(child.permission)">
+                      <router-link
+                        :to="child.path"
+                        class="flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors hover:bg-gray-100 text-sm"
+                        :class="{
+                          'bg-blue-50 text-blue-700 font-semibold': route.path === child.path,
+                          'text-gray-600': route.path !== child.path
+                        }"
+                      >
+                        <span>{{ child.icon }}</span>
+                        <span>{{ child.name }}</span>
+                      </router-link>
+                    </li>
+                  </template>
+                </ul>
+              </div>
             </li>
           </ul>
         </nav>
@@ -165,7 +232,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
@@ -182,21 +249,60 @@ const notifications = computed(() => appStore.notifications)
 const breadcrumbs = computed(() => appStore.breadcrumbs)
 const menuItems = computed(() => appStore.sidebarMenuItems)
 const displayName = computed(() => authStore.displayName)
+const userEmail = computed(() => authStore.user?.email)
+
+// Local State
+const isUserMenuOpen = ref(false)
+const openMenus = ref([])
 
 // Computed
 const appName = 'Easy CRM'
 const unreadNotifications = computed(() => 0) // TODO: 實際通知數量
 const userInitial = computed(() => {
+  if (!displayName.value) return '?'
   return displayName.value.charAt(0).toUpperCase()
 })
+
+// Watch for route changes to auto-open parent menus
+watch(route, (newRoute) => {
+  const activeParent = menuItems.value.find(item => 
+    item.children && item.children.some(child => newRoute.path.startsWith(child.path))
+  );
+  if (activeParent && !openMenus.value.includes(activeParent.id)) {
+    openMenus.value.push(activeParent.id);
+  }
+}, { immediate: true });
+
 
 // Methods
 function toggleSidebar() {
   appStore.toggleSidebar()
 }
 
+function toggleUserMenu() {
+  isUserMenuOpen.value = !isUserMenuOpen.value
+}
+
+async function handleLogout() {
+  isUserMenuOpen.value = false
+  await authStore.logout()
+}
+
 function isActive(path) {
   return route.path.startsWith(path)
+}
+
+function toggleSubMenu(menuId) {
+  const index = openMenus.value.indexOf(menuId);
+  if (index === -1) {
+    openMenus.value.push(menuId);
+  } else {
+    openMenus.value.splice(index, 1);
+  }
+}
+
+function isSubMenuOpen(menuId) {
+  return openMenus.value.includes(menuId);
 }
 
 function removeNotification(id) {

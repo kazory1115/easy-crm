@@ -6,51 +6,32 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 export const useAuthStore = defineStore('auth', () => {
+  // useRouter 必須在 setup 函式頂層呼叫
+  const router = useRouter()
+
   // ==========================================
   // State
   // ==========================================
 
-  /**
-   * 認證 Token
-   */
+  const user = ref(JSON.parse(localStorage.getItem('auth_user')) || null)
   const token = ref(localStorage.getItem('auth_token') || null)
-
-  /**
-   * 使用者資訊
-   */
-  const user = ref(null)
-
-  /**
-   * 使用者權限列表
-   */
-  const permissions = ref([])
-
-  /**
-   * 使用者角色列表
-   */
-  const roles = ref([])
+  const permissions = ref(JSON.parse(localStorage.getItem('auth_permissions')) || [])
+  const roles = ref(JSON.parse(localStorage.getItem('auth_roles')) || [])
 
   // ==========================================
   // Getters
   // ==========================================
 
-  /**
-   * 是否已登入
-   */
-  const isAuthenticated = computed(() => !!token.value)
+  const isLoggedIn = computed(() => !!token.value && !!user.value)
+  const isAuthenticated = computed(() => isLoggedIn.value) // Alias for consistency
 
-  /**
-   * 是否為管理員
-   */
   const isAdmin = computed(() => {
     return roles.value.includes('admin') || roles.value.includes('super_admin')
   })
 
-  /**
-   * 使用者顯示名稱
-   */
   const displayName = computed(() => {
     return user.value?.name || user.value?.email || '訪客'
   })
@@ -59,93 +40,50 @@ export const useAuthStore = defineStore('auth', () => {
   // Actions
   // ==========================================
 
-  /**
-   * 登入
-   * @param {Object} credentials - 登入憑證
-   * @param {string} credentials.email - Email
-   * @param {string} credentials.password - 密碼
-   * @returns {Promise<void>}
-   */
   async function login(credentials) {
-    try {
-      // TODO: 實際 API 呼叫
-      // const response = await authApi.login(credentials)
+    console.log('[Auth] Attempting login with:', credentials.email)
+    // 模擬 API 延遲
+    await new Promise(resolve => setTimeout(resolve, 500))
 
-      // 暫時模擬登入
+    try {
+      // 模擬成功的 API 回應
       const mockToken = 'mock_token_' + Date.now()
       const mockUser = {
         id: 1,
         name: '測試使用者',
         email: credentials.email,
-        avatar: null
       }
-      const mockPermissions = ['quote.view', 'quote.create', 'quote.edit', 'quote.delete']
-      const mockRoles = ['user']
+      const mockPermissions = ['quote.view', 'quote.create', 'quote.edit', 'quote.delete', 'quote.template.manage', 'quote.item.manage']
+      const mockRoles = ['user', 'editor']
 
+      // 更新 store
       setToken(mockToken)
       setUser(mockUser)
       setPermissions(mockPermissions)
       setRoles(mockRoles)
 
+      console.log('[Auth] Login successful')
       return Promise.resolve()
     } catch (error) {
       console.error('[Auth] Login failed:', error)
-      throw error
+      clearAuth() // 登入失敗時清除所有舊資料
+      throw new Error('登入失敗，請檢查您的帳號或密碼。')
     }
   }
 
-  /**
-   * 登出
-   */
   async function logout() {
-    try {
-      // TODO: 實際 API 呼叫
-      // await authApi.logout()
+    console.log('[Auth] Logging out')
+    // 模擬 API 呼叫
+    await new Promise(resolve => setTimeout(resolve, 200))
 
-      clearAuth()
-    } catch (error) {
-      console.error('[Auth] Logout failed:', error)
-      // 即使 API 失敗，仍清除本地認證資訊
-      clearAuth()
+    clearAuth()
+    // 使用 router 實例進行重定向
+    // 確保在客戶端環境下執行
+    if (typeof window !== 'undefined') {
+      router.push('/login')
     }
   }
 
-  /**
-   * 取得目前使用者資訊
-   */
-  async function fetchUser() {
-    try {
-      // TODO: 實際 API 呼叫
-      // const response = await authApi.me()
-      // setUser(response.data)
-
-      console.log('[Auth] User info fetched')
-    } catch (error) {
-      console.error('[Auth] Fetch user failed:', error)
-      throw error
-    }
-  }
-
-  /**
-   * 刷新 Token
-   */
-  async function refreshToken() {
-    try {
-      // TODO: 實際 API 呼叫
-      // const response = await authApi.refresh()
-      // setToken(response.data.token)
-
-      console.log('[Auth] Token refreshed')
-    } catch (error) {
-      console.error('[Auth] Refresh token failed:', error)
-      throw error
-    }
-  }
-
-  /**
-   * 設定 Token
-   * @param {string} newToken - 新 Token
-   */
   function setToken(newToken) {
     token.value = newToken
     if (newToken) {
@@ -155,33 +93,33 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  /**
-   * 設定使用者資訊
-   * @param {Object} userData - 使用者資料
-   */
   function setUser(userData) {
     user.value = userData
+    if (userData) {
+      localStorage.setItem('auth_user', JSON.stringify(userData))
+    } else {
+      localStorage.removeItem('auth_user')
+    }
   }
 
-  /**
-   * 設定權限列表
-   * @param {Array<string>} permissionList - 權限列表
-   */
   function setPermissions(permissionList) {
     permissions.value = permissionList
+    if (permissionList && permissionList.length > 0) {
+      localStorage.setItem('auth_permissions', JSON.stringify(permissionList))
+    } else {
+      localStorage.removeItem('auth_permissions')
+    }
   }
 
-  /**
-   * 設定角色列表
-   * @param {Array<string>} roleList - 角色列表
-   */
   function setRoles(roleList) {
     roles.value = roleList
+    if (roleList && roleList.length > 0) {
+      localStorage.setItem('auth_roles', JSON.stringify(roleList))
+    } else {
+      localStorage.removeItem('auth_roles')
+    }
   }
 
-  /**
-   * 清除認證資訊
-   */
   function clearAuth() {
     setToken(null)
     setUser(null)
@@ -189,15 +127,9 @@ export const useAuthStore = defineStore('auth', () => {
     setRoles([])
   }
 
-  /**
-   * 檢查是否有指定權限
-   * @param {string|Array<string>} permission - 權限（支援單一或多個）
-   * @param {boolean} requireAll - 是否需要全部權限（預設 false，有任一即可）
-   * @returns {boolean}
-   */
   function hasPermission(permission, requireAll = false) {
     if (!permission) return true
-    if (isAdmin.value) return true // 管理員擁有所有權限
+    if (isAdmin.value) return true
 
     const permissionsToCheck = Array.isArray(permission) ? permission : [permission]
 
@@ -208,63 +140,44 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  /**
-   * 檢查是否有指定角色
-   * @param {string|Array<string>} role - 角色（支援單一或多個）
-   * @returns {boolean}
-   */
   function hasRole(role) {
     if (!role) return true
-
     const rolesToCheck = Array.isArray(role) ? role : [role]
     return rolesToCheck.some(r => roles.value.includes(r))
+  }
+
+  function checkAuthOnAppStart() {
+    console.log('[Auth] Checking auth status on app start')
+    if (!isLoggedIn.value) {
+      console.log('[Auth] No valid session found.')
+      clearAuth()
+    } else {
+      console.log('[Auth] Session restored for user:', user.value.email)
+      // 可選：在此處呼叫 API 驗證 token 有效性
+    }
   }
 
   // ==========================================
   // Initialization
   // ==========================================
-
-  /**
-   * 初始化（從 localStorage 恢復認證狀態）
-   */
-  function init() {
-    if (token.value) {
-      // TODO: 驗證 token 是否有效
-      // 可以在這裡呼叫 fetchUser() 取得使用者資訊
-      console.log('[Auth] Initialized with token')
-    }
-  }
-
-  // 自動初始化
-  init()
+  checkAuthOnAppStart()
 
   // ==========================================
   // Return
   // ==========================================
-
   return {
-    // State
-    token,
     user,
+    token,
     permissions,
     roles,
-
-    // Getters
+    isLoggedIn,
     isAuthenticated,
     isAdmin,
     displayName,
-
-    // Actions
     login,
     logout,
-    fetchUser,
-    refreshToken,
-    setToken,
-    setUser,
-    setPermissions,
-    setRoles,
-    clearAuth,
     hasPermission,
-    hasRole
+    hasRole,
+    checkAuthOnAppStart
   }
 })
