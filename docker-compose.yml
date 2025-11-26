@@ -10,7 +10,7 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./:/var/www/html
     ports:
-      - '${NGINX_PORT:-8080}:80'
+      - '${NGINX_PORT}:80'
     depends_on:
       - php
     networks:
@@ -25,10 +25,10 @@ services:
     build:
       context: .
       args:
-        TIMEZONE: ${TIMEZONE:-Asia/Taipei}
-        PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-256M}
-        PHP_UPLOAD_MAX_FILESIZE: ${PHP_UPLOAD_MAX_FILESIZE:-20M}
-        PHP_POST_MAX_SIZE: ${PHP_POST_MAX_SIZE:-20M}
+        TIMEZONE: ${TIMEZONE}
+        PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT}
+        PHP_UPLOAD_MAX_FILESIZE: ${PHP_UPLOAD_MAX_FILESIZE}
+        PHP_POST_MAX_SIZE: ${PHP_POST_MAX_SIZE}
     container_name: easy-crm-php
     restart: always
     volumes:
@@ -59,7 +59,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_DATABASE:-easy_crm_db}
       POSTGRES_USER: ${DB_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD?You must set a DB_PASSWORD in the .env file}
       TZ: ${TIMEZONE:-Asia/Taipei}
       PGTZ: ${TIMEZONE:-Asia/Taipei}
     volumes:
@@ -88,7 +88,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_TEST_DATABASE:-easy_crm_test}
       POSTGRES_USER: ${DB_TEST_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${DB_TEST_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_TEST_PASSWORD?You must set a DB_TEST_PASSWORD in the .env file}
       TZ: ${TIMEZONE:-Asia/Taipei}
       PGTZ: ${TIMEZONE:-Asia/Taipei}
     volumes:
@@ -117,7 +117,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_ECIC_DATABASE:-easy_crm_ecic}
       POSTGRES_USER: ${DB_ECIC_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${DB_ECIC_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_ECIC_PASSWORD?You must set a DB_ECIC_PASSWORD in the .env file}
       TZ: ${TIMEZONE:-Asia/Taipei}
       PGTZ: ${TIMEZONE:-Asia/Taipei}
     volumes:
@@ -145,7 +145,7 @@ services:
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@easyCRM.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD?You must set a PGADMIN_PASSWORD in the .env file}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       TZ: ${TIMEZONE:-Asia/Taipei}
     volumes:

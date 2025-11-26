@@ -34,11 +34,11 @@
  * order 數字越小越前面
  */
 export const moduleConfig = {
-  // 🧾 報價單模組
+  // 報價單模組
   quote: {
     id: 'quote',
     name: '報價單',
-    icon: '📝',
+    icon: 'file-lines',
     enabled: true, // ✅ 已啟用（目前正在遷移）
     path: '/quote',
     description: '報價單建立、編輯、匯出與歷史記錄',
@@ -60,31 +60,31 @@ export const moduleConfig = {
         id: 'quote-create',
         name: '新增報價單',
         path: '/quote/create',
-        icon: '➕',
+        icon: 'plus',
         permission: 'quote.create'
       },
       {
         id: 'quote-list',
         name: '歷史紀錄',
         path: '/quote/list',
-        icon: '📜',
+        icon: 'scroll',
         permission: 'quote.view'
       },
       {
         id: 'quote-templates',
         name: '範本管理',
         path: '/quote/templates',
-        icon: '📋',
+        icon: 'book',
         permission: 'quote.template.manage'
       }
     ]
   },
 
-  // 👥 客戶管理模組
+  // 客戶管理模組
   crm: {
     id: 'crm',
     name: '客戶管理',
-    icon: '👥',
+    icon: 'users',
     enabled: false, // ⏳ 未啟用（開發中）
     path: '/crm',
     description: '客戶資料、聯絡歷程、商機管理',
@@ -103,11 +103,11 @@ export const moduleConfig = {
     }
   },
 
-  // 📦 進銷存模組
+  // 進銷存模組
   inventory: {
     id: 'inventory',
     name: '進銷存',
-    icon: '📦',
+    icon: 'box',
     enabled: false, // ⏳ 未啟用（規劃中）
     path: '/inventory',
     description: '商品管理、庫存追蹤、進銷記錄',
@@ -126,34 +126,50 @@ export const moduleConfig = {
     }
   },
 
-  // 👔 員工管理模組
+  // 員工管理模組
   staff: {
     id: 'staff',
     name: '員工管理',
-    icon: '👔',
-    enabled: false, // ⏳ 未啟用（規劃中）
+    icon: 'briefcase',
+    enabled: true, // ✅ 已啟用（MVP 版本）
     path: '/staff',
-    description: '員工資料、角色權限管理',
+    description: '員工資料、角色權限管理、操作紀錄',
     permissions: ['staff.view', 'staff.create', 'staff.edit', 'staff.delete', 'role.manage'],
     order: 4,
-    version: '0.0.0',
+    version: '1.0.0',
     meta: {
       color: '#8b5cf6',
-      badge: '規劃中',
+      badge: 'MVP',
       features: [
         '員工資料管理',
+        '操作紀錄查詢',
         '角色權限配置',
-        '組織架構',
-        '權限矩陣'
+        '組織架構'
       ]
-    }
+    },
+    children: [
+      {
+        id: 'staff-list',
+        name: '員工列表',
+        path: '/staff/list',
+        icon: 'circle-user',
+        permission: 'staff.view'
+      },
+      {
+        id: 'activity-logs',
+        name: '操作紀錄',
+        path: '/staff/logs',
+        icon: 'clock-rotate-left',
+        permission: 'staff.view'
+      }
+    ]
   },
 
-  // 📊 報表中心模組
+  // 報表中心模組
   report: {
     id: 'report',
     name: '報表中心',
-    icon: '📊',
+    icon: 'chart-bar',
     enabled: false, // ⏳ 未啟用（規劃中）
     path: '/report',
     description: '銷售報表、庫存報表、自定義報表',

@@ -9,7 +9,7 @@ export default [
     redirect: '/quote/list',
     meta: {
       title: '報價單',
-      icon: '📝',
+      icon: 'file-lines',
       requiresAuth: false, // 暫時不需要認證（後續整合時改為 true）
       permissions: ['quote.view']
     },

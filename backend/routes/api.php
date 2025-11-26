@@ -3,8 +3,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\QuoteController;
+use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ActivityLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,5 +38,66 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout-all', [AuthController::class, 'logoutAll']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/change-password', [AuthController::class, 'changePassword']);
+    });
+
+    // ==========================================
+    // 報價單相關路由
+    // ==========================================
+    Route::prefix('quotes')->group(function () {
+        // 統計資料
+        Route::get('/stats', [QuoteController::class, 'stats']);
+
+        // 批次操作
+        Route::post('/batch-delete', [QuoteController::class, 'batchDelete']);
+        Route::post('/batch-export', [QuoteController::class, 'batchExport']);
+
+        // CRUD
+        Route::get('/', [QuoteController::class, 'index']);
+        Route::post('/', [QuoteController::class, 'store']);
+        Route::get('/{id}', [QuoteController::class, 'show']);
+        Route::put('/{id}', [QuoteController::class, 'update']);
+        Route::delete('/{id}', [QuoteController::class, 'destroy']);
+
+        // 狀態管理
+        Route::patch('/{id}/status', [QuoteController::class, 'updateStatus']);
+        Route::post('/{id}/send', [QuoteController::class, 'send']);
+
+        // 匯出
+        Route::get('/{id}/pdf', [QuoteController::class, 'exportPdf']);
+        Route::get('/{id}/excel', [QuoteController::class, 'exportExcel']);
+    });
+
+    // ==========================================
+    // 範本相關路由
+    // ==========================================
+    Route::prefix('templates')->group(function () {
+        Route::get('/', [TemplateController::class, 'index']);
+        Route::post('/', [TemplateController::class, 'store']);
+        Route::get('/{id}', [TemplateController::class, 'show']);
+        Route::put('/{id}', [TemplateController::class, 'update']);
+        Route::delete('/{id}', [TemplateController::class, 'destroy']);
+    });
+
+    // ==========================================
+    // 用戶/員工管理路由
+    // ==========================================
+    Route::prefix('users')->group(function () {
+        Route::get('/', [UserController::class, 'index']);
+        Route::post('/', [UserController::class, 'store']);
+        Route::get('/stats', [UserController::class, 'stats']);
+        Route::get('/{id}', [UserController::class, 'show']);
+        Route::put('/{id}', [UserController::class, 'update']);
+        Route::delete('/{id}', [UserController::class, 'destroy']);
+    });
+
+    // ==========================================
+    // 操作紀錄路由
+    // ==========================================
+    Route::prefix('activity-logs')->group(function () {
+        Route::get('/', [ActivityLogController::class, 'index']);
+        Route::get('/my-logs', [ActivityLogController::class, 'myLogs']);
+        Route::get('/stats', [ActivityLogController::class, 'stats']);
+        Route::get('/module/{module}', [ActivityLogController::class, 'moduleLogs']);
+        Route::get('/{id}', [ActivityLogController::class, 'show']);
     });
 });

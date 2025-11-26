@@ -37,7 +37,7 @@ DB_ECIC_PASSWORD=your_strong_password_here
 PGADMIN_PASSWORD=your_pgadmin_password_here
 
 # 🔧 可選：自訂 Port（如果預設 port 被占用）
-NGINX_PORT=8080
+NGINX_PORT=8180
 PGADMIN_PORT=5050
 DB_EXTERNAL_PORT=5432
 DB_TEST_EXTERNAL_PORT=5433
@@ -268,7 +268,7 @@ docker-compose exec php php /var/www/html/backend/artisan key:generate
 ┌─────────────┐
 │   Browser   │
 └──────┬──────┘
-       │ :8080
+       │ :8180
        ▼
 ┌─────────────┐
 │    Nginx    │

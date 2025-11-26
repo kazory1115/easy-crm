@@ -19,7 +19,7 @@ import * as quoteApi from '../api/quoteApi'
  * - 'localStorage': 使用 LocalStorage（離線模式）
  * - 'api': 使用後端 API（在線模式）
  */
-const dataSource = ref('localStorage') // 預設使用 LocalStorage
+const dataSource = ref('api') // 切換到 API 模式
 
 // LocalStorage 鍵名
 const STORAGE_KEYS = {

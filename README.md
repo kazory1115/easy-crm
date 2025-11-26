@@ -2,11 +2,12 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-3.0.0--dev-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Vue](https://img.shields.io/badge/Vue-3.5.13-brightgreen.svg)
-![Laravel](https://img.shields.io/badge/Laravel-11.x-red.svg)
+![Laravel](https://img.shields.io/badge/Laravel-12.x-red.svg)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)
+![Progress](https://img.shields.io/badge/backend-quote%20API%2075%25-success.svg)
 
 **一個現代化、模組化的企業 CRM 解決方案**
 
@@ -32,13 +33,17 @@ Easy CRM 是一個基於 **Vue 3 + Laravel + PostgreSQL** 的全功能企業客�
 
 ### ✨ 核心功能
 
-| 模組                      | 功能描述                            | 狀態             |
-| ------------------------- | ----------------------------------- | ---------------- |
-| 🧾 **報價單 (Quote)**     | 自定義範本、動態欄位、匯出 Word/PDF | 🔲 規劃中        |
-| 📦 **進銷存 (Inventory)** | 商品管理、庫存追蹤、進銷記錄        | 🔲 規劃中        |
-| 👥 **客戶管理 (CRM)**     | 客戶資料、聯絡歷程、商機管理        | 🔲 規劃中        |
-| 👔 **員工管理 (Staff)**   | 組織架構、角色權限、績效追蹤        | 🔲 規劃中        |
-| 📊 **報表中心 (Report)**  | 銷售報表、庫存報表、自定義報表      | 🔲 規劃中        |
+| 模組                      | 功能描述                                | 後端狀態          | 前端狀態      |
+| ------------------------- | --------------------------------------- | ----------------- | ------------- |
+| 🧾 **報價單 (Quote)**     | CRUD API、狀態管理、統計、批次操作      | 🟢 完成 75%       | 🟡 LocalStorage |
+|                           | ✅ 完整 API、自動編號、操作紀錄         |                   |               |
+|                           | 🔴 PDF/Excel 匯出待實作                 |                   |               |
+| 📋 **範本管理 (Template)** | 自定義範本、動態欄位（5 種類型）        | 🟢 完成 100%      | 🟡 LocalStorage |
+| 📦 **商品管理 (Item)**     | 商品資料、價格、單位、分類              | 🟡 資料表完成     | 🟡 LocalStorage |
+| 👥 **客戶管理 (Customer)** | 客戶資料、聯絡資訊、統編                | 🟡 資料表完成     | 🔲 規劃中     |
+| 📦 **進銷存 (Inventory)**  | 庫存追蹤、進銷記錄、盤點                | 🔲 規劃中         | 🔲 規劃中     |
+| 👔 **員工管理 (Staff)**    | 組織架構、角色權限、績效追蹤            | 🔲 規劃中         | 🔲 規劃中     |
+| 📊 **報表中心 (Report)**   | 銷售報表、庫存報表、自定義報表          | 🔲 規劃中         | 🔲 規劃中     |
 
 ### 🎯 技術亮點
 
@@ -48,6 +53,9 @@ Easy CRM 是一個基於 **Vue 3 + Laravel + PostgreSQL** 的全功能企業客�
 - 🚀 **高效能** - PostgreSQL + Redis 快取加速
 - 🐳 **容器化部署** - Docker Compose 一鍵啟動
 - 🔒 **環境變數管理** - 安全的配置管理方案
+- 📝 **完整操作紀錄** - 雙層日誌系統（模組 Log + 全域 ActivityLog）✨ **NEW**
+- 🔄 **自動化追蹤** - LogsActivity Trait 自動記錄 CRUD 操作 ✨ **NEW**
+- 🗑️ **軟刪除機制** - 資料可恢復，操作可追溯 ✨ **NEW**
 
 ---
 
@@ -76,6 +84,46 @@ Easy CRM 是一個基於 **Vue 3 + Laravel + PostgreSQL** 的全功能企業客�
 - **Web Server**: Nginx
 - **PHP 版本**: PHP 8.2-FPM
 - **資料庫管理**: pgAdmin 4
+
+---
+
+## 🔌 API 端點 (已完成)
+
+### 報價單 API
+
+| 方法   | 端點                          | 描述               | 狀態 |
+| ------ | ----------------------------- | ------------------ | ---- |
+| GET    | `/api/quotes`                 | 取得報價單列表     | ✅   |
+| POST   | `/api/quotes`                 | 建立報價單         | ✅   |
+| GET    | `/api/quotes/{id}`            | 取得單一報價單     | ✅   |
+| PUT    | `/api/quotes/{id}`            | 更新報價單         | ✅   |
+| DELETE | `/api/quotes/{id}`            | 刪除報價單         | ✅   |
+| POST   | `/api/quotes/batch-delete`    | 批次刪除           | ✅   |
+| PATCH  | `/api/quotes/{id}/status`     | 更新狀態           | ✅   |
+| POST   | `/api/quotes/{id}/send`       | 發送報價單         | ✅   |
+| GET    | `/api/quotes/stats`           | 取得統計資料       | ✅   |
+| GET    | `/api/quotes/{id}/pdf`        | 匯出 PDF           | 🔴   |
+| GET    | `/api/quotes/{id}/excel`      | 匯出 Excel         | 🔴   |
+| POST   | `/api/quotes/batch-export`    | 批次匯出           | 🔴   |
+
+### 範本 API
+
+| 方法   | 端點                    | 描述           | 狀態 |
+| ------ | ----------------------- | -------------- | ---- |
+| GET    | `/api/templates`        | 取得範本列表   | ✅   |
+| POST   | `/api/templates`        | 建立範本       | ✅   |
+| GET    | `/api/templates/{id}`   | 取得單一範本   | ✅   |
+| PUT    | `/api/templates/{id}`   | 更新範本       | ✅   |
+| DELETE | `/api/templates/{id}`   | 刪除範本       | ✅   |
+
+### API 功能特色
+
+- ✅ **分頁與排序** - 支援自定義 per_page、sort_by、sort_order
+- ✅ **搜尋與篩選** - 支援關鍵字搜尋、狀態篩選、日期範圍
+- ✅ **關聯載入** - 自動載入關聯資料（客戶、項目、建立者等）
+- ✅ **交易處理** - 使用資料庫 Transaction 確保資料一致性
+- ✅ **錯誤處理** - 統一的錯誤回應格式
+- ✅ **操作紀錄** - 自動記錄所有 CRUD 操作
 
 ---
 
@@ -167,9 +215,9 @@ docker-compose ps
 
 ### 6. 訪問應用程式
 
-- 🌐 **前端應用**: http://localhost:8080
+- 🌐 **前端應用**: http://localhost:8180
 - 🗄️ **pgAdmin**: http://localhost:5050
-- 📡 **API 文件**: http://localhost:8080/api/documentation (計畫中)
+- 📡 **API 文件**: http://localhost:8180/api/documentation (計畫中)
 
 ---
 
@@ -278,14 +326,30 @@ easy-crm/
 │   ├── app/
 │   │   ├── Http/
 │   │   │   └── Controllers/
-│   │   │       └── Api/        # API 控制器
+│   │   │       └── Api/
+│   │   │           ├── QuoteController.php       ✨ NEW - 報價單 API
+│   │   │           └── TemplateController.php    ✨ NEW - 範本 API
 │   │   ├── Models/             # Eloquent 模型
+│   │   │   ├── Quote.php, QuoteItem.php, QuoteLog.php      ✨ NEW
+│   │   │   ├── Template.php, TemplateField.php, TemplateLog.php ✨ NEW
+│   │   │   ├── Customer.php, CustomerLog.php     ✨ NEW
+│   │   │   ├── Item.php, ItemLog.php             ✨ NEW
+│   │   │   └── ActivityLog.php, UserLog.php      ✨ NEW
+│   │   ├── Traits/             ✨ NEW
+│   │   │   └── LogsActivity.php # 自動操作紀錄追蹤
 │   │   └── Services/           # 業務邏輯服務
+│   ├── config/
+│   │   └── cors.php            ✨ NEW - CORS 跨域配置
 │   ├── database/
 │   │   ├── migrations/         # 資料庫遷移
+│   │   │   ├── *_create_quotes_table.php         ✨ NEW
+│   │   │   ├── *_create_templates_table.php      ✨ NEW
+│   │   │   ├── *_create_customers_table.php      ✨ NEW
+│   │   │   ├── *_create_items_table.php          ✨ NEW
+│   │   │   └── *_create_activity_logs_table.php  ✨ NEW (共 12 張表)
 │   │   └── seeders/            # 資料填充
 │   └── routes/
-│       └── api.php             # API 路由定義
+│       └── api.php             # API 路由定義 (已配置報價單、範本路由)
 │
 ├── docker-compose.yml           # Docker 編排配置
 ├── dockerfile                   # PHP 容器定義
@@ -408,25 +472,70 @@ docker-compose exec php php /var/www/html/backend/artisan key:generate
 
 ## 🗺️ 開發路線圖
 
-### v3.0.0 (規劃中) - CRM 核心功能
+### v3.0.0 (開發中) - CRM 核心功能 🚀
 
-- [ ] 基礎架構重構
+#### ✅ Phase 1: 基礎架構 (已完成)
 
-  - [x] 前端模組化架構實作
-  - [ ] 後端 API 基礎建設
-  - [ ] 認證授權系統（Laravel Sanctum）
+- [x] **前端模組化架構**
+  - [x] Vue 3 + Vite 模組化設計
+  - [x] 報價單前端 UI (LocalStorage 模式)
   - [x] 前端認證流程與 UI (模擬)
 
-- [ ] 報價單模組升級
+- [x] **後端 API 基礎建設** ✨ **NEW**
+  - [x] Laravel 12 專案架構
+  - [x] PostgreSQL 資料庫連接
+  - [x] CORS 跨域配置
+  - [x] 認證授權系統（Laravel Sanctum）
 
-  - [ ] LocalStorage → API 遷移
+- [x] **操作紀錄系統** ✨ **NEW**
+  - [x] LogsActivity Trait 自動追蹤
+  - [x] 雙層日誌架構 (模組 Log + ActivityLog)
+  - [x] IP、User Agent 記錄
+  - [x] 軟刪除與資料恢復
+
+#### 🟢 Phase 2: 報價單模組 (後端完成 75%)
+
+- [x] **資料庫設計** ✨ **NEW**
+  - [x] quotes, quote_items, quote_logs 資料表
+  - [x] 自動編號機制
+  - [x] 狀態管理 (draft/sent/approved/rejected)
+
+- [x] **核心 API** ✨ **NEW**
+  - [x] 完整 CRUD API
+  - [x] 批次操作 (批次刪除)
+  - [x] 狀態管理 API
+  - [x] 統計資料 API
+  - [x] 自動金額計算
+
+- [ ] **進階功能**
+  - [ ] PDF 匯出 (待實作)
+  - [ ] Excel 匯出 (待實作)
+  - [ ] 批次匯出 (待實作)
+  - [ ] 郵件發送整合
+  - [ ] LocalStorage → API 遷移 (前端)
   - [ ] 多人協作功能
   - [ ] 版本控制
 
-- [ ] 客戶管理模組
-  - [ ] 客戶資料 CRUD
-  - [ ] 聯絡歷程記錄
-  - [ ] 商機管理
+#### 🟢 Phase 3: 範本管理 (後端完成 100%) ✨ **NEW**
+
+- [x] **範本系統**
+  - [x] templates, template_fields, template_logs 資料表
+  - [x] 完整 CRUD API
+  - [x] 動態欄位管理 (支援 5 種類型)
+  - [x] 分類與類型管理
+  - [x] 使用次數統計
+
+#### 🟡 Phase 4: 基礎資料模組 (資料表完成)
+
+- [x] **客戶管理資料表** ✨ **NEW**
+  - [x] customers, customer_logs 資料表
+  - [x] Model 與關聯定義
+  - [ ] CustomerController API (待實作)
+
+- [x] **商品管理資料表** ✨ **NEW**
+  - [x] items, item_logs 資料表
+  - [x] Model 與關聯定義
+  - [ ] ItemController API (待實作)
 
 ### v3.1.0 - 進銷存系統
 
@@ -482,6 +591,7 @@ docker-compose exec php php /var/www/html/backend/artisan key:generate
 
 Made with ❤️ by Easy CRM Team
 
-_最後更新: 2025-11-07_
+_最後更新: 2025-01-26_
+_v3.0.0-dev: 報價單後端 API 完成 75%，範本管理完成 100%_
 
 </div>

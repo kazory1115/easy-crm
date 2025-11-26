@@ -3,7 +3,7 @@
     <div class="text-center">
       <!-- 404 圖示 -->
       <div class="mb-8">
-        <span class="text-9xl">🔍</span>
+        <font-awesome-icon icon="magnifying-glass" class="text-9xl text-gray-400" />
       </div>
 
       <!-- 錯誤訊息 -->
@@ -19,16 +19,16 @@
       <div class="flex gap-4 justify-center">
         <button
           @click="goBack"
-          class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+          class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium flex items-center"
         >
-          <i class="fa-solid fa-arrow-left mr-2"></i>
+          <font-awesome-icon icon="arrow-left" class="mr-2" />
           返回上一頁
         </button>
         <button
           @click="goHome"
-          class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center"
         >
-          <i class="fa-solid fa-home mr-2"></i>
+          <font-awesome-icon icon="house" class="mr-2" />
           返回首頁
         </button>
       </div>
@@ -39,21 +39,24 @@
         <div class="flex flex-wrap gap-2 justify-center">
           <router-link
             to="/quote/create"
-            class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
           >
-            📝 建立報價單
+            <font-awesome-icon icon="file-lines" />
+            建立報價單
           </router-link>
           <router-link
             to="/quote/list"
-            class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
           >
-            📋 查看報價單列表
+            <font-awesome-icon icon="clipboard-list" />
+            查看報價單列表
           </router-link>
           <router-link
             to="/quote/templates"
-            class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
           >
-            📁 範本管理
+            <font-awesome-icon icon="folder" />
+            範本管理
           </router-link>
         </div>
       </div>

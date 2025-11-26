@@ -7,6 +7,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { post, get } from '@/utils/http'
 
 export const useAuthStore = defineStore('auth', () => {
   // useRouter 必須在 setup 函式頂層呼叫
@@ -42,23 +43,25 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(credentials) {
     console.log('[Auth] Attempting login with:', credentials.email)
-    // 模擬 API 延遲
-    await new Promise(resolve => setTimeout(resolve, 500))
 
     try {
-      // 模擬成功的 API 回應
-      const mockToken = 'mock_token_' + Date.now()
-      const mockUser = {
-        id: 1,
-        name: '測試使用者',
+      // 呼叫真實 API
+      const response = await post('/auth/login', {
         email: credentials.email,
-      }
+        password: credentials.password,
+        device_name: credentials.device_name || 'web-browser'
+      })
+
+      // API 回應格式: { user: {...}, token: '...' }
+      const { user: userData, token: authToken } = response
+
+      // 模擬權限和角色（實際應該從 API 回傳）
       const mockPermissions = ['quote.view', 'quote.create', 'quote.edit', 'quote.delete', 'quote.template.manage', 'quote.item.manage']
       const mockRoles = ['user', 'editor']
 
       // 更新 store
-      setToken(mockToken)
-      setUser(mockUser)
+      setToken(authToken)
+      setUser(userData)
       setPermissions(mockPermissions)
       setRoles(mockRoles)
 
@@ -67,14 +70,20 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (error) {
       console.error('[Auth] Login failed:', error)
       clearAuth() // 登入失敗時清除所有舊資料
-      throw new Error('登入失敗，請檢查您的帳號或密碼。')
+      throw new Error(error.response?.data?.message || '登入失敗，請檢查您的帳號或密碼。')
     }
   }
 
   async function logout() {
     console.log('[Auth] Logging out')
-    // 模擬 API 呼叫
-    await new Promise(resolve => setTimeout(resolve, 200))
+
+    try {
+      // 呼叫真實 API 登出（撤銷 token）
+      await post('/auth/logout')
+    } catch (error) {
+      console.error('[Auth] Logout API failed:', error)
+      // 即使 API 失敗，仍然清除本地狀態
+    }
 
     clearAuth()
     // 使用 router 實例進行重定向
@@ -176,6 +185,7 @@ export const useAuthStore = defineStore('auth', () => {
     displayName,
     login,
     logout,
+    clearAuth,
     hasPermission,
     hasRole,
     checkAuthOnAppStart

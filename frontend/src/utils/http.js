@@ -11,7 +11,7 @@ import { useAppStore } from '@/stores/app'
 /**
  * API 基礎 URL
  */
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8180/api'
 
 /**
  * 建立 Axios 實例

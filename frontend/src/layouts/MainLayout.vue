@@ -16,7 +16,7 @@
           </button>
 
           <div class="flex items-center space-x-2">
-            <span class="text-2xl">📊</span>
+            <font-awesome-icon icon="chart-bar" class="text-2xl text-blue-600" />
             <h1 class="text-xl font-bold text-gray-800">{{ appName }}</h1>
           </div>
         </div>
@@ -90,7 +90,7 @@
                 }"
                 :title="sidebarCollapsed ? item.name : ''"
               >
-                <span class="text-2xl w-8 text-center">{{ item.icon }}</span>
+                <font-awesome-icon :icon="item.icon" class="text-xl w-8 text-center" />
                 <span v-if="!sidebarCollapsed" class="font-medium">{{ item.name }}</span>
                 <span
                   v-if="item.badge && !sidebarCollapsed"
@@ -112,7 +112,7 @@
                   }"
                 >
                   <div class="flex items-center space-x-3">
-                    <span class="text-2xl w-8 text-center">{{ item.icon }}</span>
+                    <font-awesome-icon :icon="item.icon" class="text-xl w-8 text-center" />
                     <span v-if="!sidebarCollapsed" class="font-medium">{{ item.name }}</span>
                   </div>
                   <svg
@@ -135,7 +135,7 @@
                           'text-gray-600': route.path !== child.path
                         }"
                       >
-                        <span>{{ child.icon }}</span>
+                        <font-awesome-icon :icon="child.icon" class="text-sm w-4" />
                         <span>{{ child.name }}</span>
                       </router-link>
                     </li>
@@ -196,7 +196,7 @@
           ]"
         >
           <div class="flex items-center space-x-3">
-            <span class="text-2xl">{{ notificationIcon(notification.type) }}</span>
+            <font-awesome-icon :icon="notificationIcon(notification.type)" class="text-xl" />
             <p class="flex-1 text-sm font-medium">{{ notification.message }}</p>
             <button
               @click="removeNotification(notification.id)"
@@ -321,10 +321,10 @@ function notificationClass(type) {
 
 function notificationIcon(type) {
   const icons = {
-    success: '✅',
-    error: '❌',
-    warning: '⚠️',
-    info: 'ℹ️'
+    success: 'circle-check',
+    error: 'circle-xmark',
+    warning: 'triangle-exclamation',
+    info: 'circle-info'
   }
   return icons[type] || icons.info
 }
