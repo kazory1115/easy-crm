@@ -35,7 +35,8 @@ RUN docker-php-ext-install \
     pcntl \
     bcmath \
     gd \
-    zip
+    zip \
+    && php -m | grep -i pdo_mysql
 
 # 設定 PHP 配置
 RUN { \
@@ -48,6 +49,10 @@ RUN { \
 # 安裝 Composer，將其從官方 Composer 映像中複製到容器
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# 複製啟動腳本
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # 設置工作目錄
 WORKDIR /var/www/html
 
@@ -59,6 +64,9 @@ RUN chown -R www-data:www-data /var/www/html
 
 # 暴露容器的 9000 端口（供 PHP-FPM 使用）
 EXPOSE 9000
+
+# 設定啟動腳本
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 # 啟動 PHP-FPM，這是 PHP 的 FastCGI 進程管理器
 CMD ["php-fpm"]
