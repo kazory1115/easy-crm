@@ -16,7 +16,7 @@ services:
     networks:
       - easy-crm-network
     environment:
-      - TZ=${TIMEZONE:-Asia/Taipei}
+      - TZ=${TIMEZONE}
 
   # ==========================================
   # PHP-FPM Application Server
@@ -35,127 +35,111 @@ services:
       - ./:/var/www/html
       - ./backend:/var/www/html/backend
     environment:
-      - DB_CONNECTION=${DB_CONNECTION:-pgsql}
-      - DB_HOST=${DB_HOST:-postgres}
-      - DB_PORT=${DB_PORT:-5432}
-      - DB_DATABASE=${DB_DATABASE:-easy_crm_db}
-      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_CONNECTION=${DB_CONNECTION}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
-      - TZ=${TIMEZONE:-Asia/Taipei}
+      - TZ=${TIMEZONE}
     depends_on:
-      - postgres
-      - postgres_test
-      - postgres_ecic
+      - mysql
+      - mysql_test
+      - mysql_ecic
     networks:
       - easy-crm-network
 
   # ==========================================
-  # PostgreSQL - 主資料庫
+  # MySQL - 主資料庫
   # ==========================================
-  postgres:
-    image: postgres:16-alpine
-    container_name: easy-crm-postgres
+  mysql:
+    image: mysql:8.0
+    container_name: easy-crm-mysql
     restart: always
     environment:
-      POSTGRES_DB: ${DB_DATABASE:-easy_crm_db}
-      POSTGRES_USER: ${DB_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD?You must set a DB_PASSWORD in the .env file}
-      TZ: ${TIMEZONE:-Asia/Taipei}
-      PGTZ: ${TIMEZONE:-Asia/Taipei}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD?You must set a DB_ROOT_PASSWORD in the .env file}
+      TZ: ${TIMEZONE}
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     ports:
-      - '${DB_EXTERNAL_PORT:-5432}:5432'
+      - '${DB_EXTERNAL_PORT}:3306'
     networks:
       - easy-crm-network
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_DATABASE:-easy_crm_db}',
-        ]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p${DB_ROOT_PASSWORD}']
       interval: 10s
       timeout: 5s
       retries: 5
 
   # ==========================================
-  # PostgreSQL - 測試資料庫
+  # MySQL - 測試資料庫
   # ==========================================
-  postgres_test:
-    image: postgres:16-alpine
-    container_name: easy-crm-postgres-test
+  mysql_test:
+    image: mysql:8.0
+    container_name: easy-crm-mysql-test
     restart: always
     environment:
-      POSTGRES_DB: ${DB_TEST_DATABASE:-easy_crm_test}
-      POSTGRES_USER: ${DB_TEST_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${DB_TEST_PASSWORD?You must set a DB_TEST_PASSWORD in the .env file}
-      TZ: ${TIMEZONE:-Asia/Taipei}
-      PGTZ: ${TIMEZONE:-Asia/Taipei}
+      MYSQL_DATABASE: ${DB_TEST_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_TEST_ROOT_PASSWORD?You must set a DB_TEST_ROOT_PASSWORD in the .env file}
+      TZ: ${TIMEZONE}
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
-      - postgres_test_data:/var/lib/postgresql/data
+      - mysql_test_data:/var/lib/mysql
     ports:
-      - '${DB_TEST_EXTERNAL_PORT:-5433}:5432'
+      - '${DB_TEST_EXTERNAL_PORT}:3306'
     networks:
       - easy-crm-network
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'pg_isready -U ${DB_TEST_USERNAME:-postgres} -d ${DB_TEST_DATABASE:-easy_crm_test}',
-        ]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p${DB_TEST_ROOT_PASSWORD}']
       interval: 10s
       timeout: 5s
       retries: 5
 
   # ==========================================
-  # PostgreSQL - ECIC 資料庫
+  # MySQL - ECIC 資料庫
   # ==========================================
-  postgres_ecic:
-    image: postgres:16-alpine
-    container_name: easy-crm-postgres-ecic
+  mysql_ecic:
+    image: mysql:8.0
+    container_name: easy-crm-mysql-ecic
     restart: always
     environment:
-      POSTGRES_DB: ${DB_ECIC_DATABASE:-easy_crm_ecic}
-      POSTGRES_USER: ${DB_ECIC_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${DB_ECIC_PASSWORD?You must set a DB_ECIC_PASSWORD in the .env file}
-      TZ: ${TIMEZONE:-Asia/Taipei}
-      PGTZ: ${TIMEZONE:-Asia/Taipei}
+      MYSQL_DATABASE: ${DB_ECIC_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_ECIC_ROOT_PASSWORD?You must set a DB_ECIC_ROOT_PASSWORD in the .env file}
+      TZ: ${TIMEZONE}
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
-      - postgres_ecic_data:/var/lib/postgresql/data
+      - mysql_ecic_data:/var/lib/mysql
     ports:
-      - '${DB_ECIC_EXTERNAL_PORT:-5434}:5432'
+      - '${DB_ECIC_EXTERNAL_PORT}:3306'
     networks:
       - easy-crm-network
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'pg_isready -U ${DB_ECIC_USERNAME:-postgres} -d ${DB_ECIC_DATABASE:-easy_crm_ecic}',
-        ]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p${DB_ECIC_ROOT_PASSWORD}']
       interval: 10s
       timeout: 5s
       retries: 5
 
   # ==========================================
-  # pgAdmin - PostgreSQL 管理工具
+  # phpMyAdmin - MySQL 管理工具
   # ==========================================
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: easy-crm-pgadmin
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: easy-crm-phpmyadmin
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@easyCRM.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD?You must set a PGADMIN_PASSWORD in the .env file}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-      TZ: ${TIMEZONE:-Asia/Taipei}
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD?You must set a DB_ROOT_PASSWORD in the .env file}
+      TZ: ${TIMEZONE}
     ports:
-      - '${PGADMIN_PORT:-5050}:80'
+      - '${PHPMYADMIN_PORT}:80'
     depends_on:
-      - postgres
-      - postgres_test
-      - postgres_ecic
+      - mysql
+      - mysql_test
+      - mysql_ecic
     networks:
       - easy-crm-network
 
@@ -171,11 +155,9 @@ networks:
 # Volumes
 # ==========================================
 volumes:
-  postgres_data:
-    name: easy-crm-postgres-data
-  postgres_test_data:
-    name: easy-crm-postgres-test-data
-  postgres_ecic_data:
-    name: easy-crm-postgres-ecic-data
-  pgadmin_data:
-    name: easy-crm-pgadmin-data
+  mysql_data:
+    name: easy-crm-mysql-data
+  mysql_test_data:
+    name: easy-crm-mysql-test-data
+  mysql_ecic_data:
+    name: easy-crm-mysql-ecic-data

@@ -13,24 +13,23 @@ ENV TZ=${TIMEZONE} \
     PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE} \
     PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE}
 
-# 安裝系統依賴，包括 Git、curl、PostgreSQL 客戶端和 PHP 擴展所需的開發包
+# 安裝系統依賴，包括 Git、curl、MySQL 客戶端和 PHP 擴展所需的開發包
 RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    libpq-dev \
+    default-mysql-client \
     libzip-dev \
     zip \
     unzip \
-    postgresql-client \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 安裝 PHP 擴展（PostgreSQL 相關）
+# 安裝 PHP 擴展（MySQL 相關）
 RUN docker-php-ext-install \
-    pdo_pgsql \
-    pgsql \
+    pdo_mysql \
+    mysqli \
     mbstring \
     exif \
     pcntl \
