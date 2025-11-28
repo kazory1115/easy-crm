@@ -4,7 +4,7 @@
  * 封裝所有報價單相關的 API 請求
  */
 
-import { get, post, put, del, download } from '@/utils/http'
+import { get, post, put, patch, del, download } from '@/utils/http'
 
 /**
  * 報價單 API 端點
@@ -14,6 +14,8 @@ const QUOTE_API = {
   QUOTE_DETAIL: (id) => `/quotes/${id}`,
   QUOTE_PDF: (id) => `/quotes/${id}/pdf`,
   QUOTE_EXCEL: (id) => `/quotes/${id}/excel`,
+  ITEMS: '/quote-items',
+  ITEM_DETAIL: (id) => `/quote-items/${id}`,
   TEMPLATES: '/templates',
   TEMPLATE_DETAIL: (id) => `/templates/${id}`
 }
@@ -153,6 +155,56 @@ export function batchExportQuotes(ids, format = 'pdf', filename) {
 }
 
 // ==========================================
+// 一般項目 CRUD
+// ==========================================
+
+/**
+ * 取得項目列表
+ * @param {Object} params - 查詢參數
+ * @returns {Promise<Array>} 項目列表
+ */
+export function getItems(params = {}) {
+  return get(QUOTE_API.ITEMS, params)
+}
+
+/**
+ * 取得單一項目
+ * @param {number} id - 項目 ID
+ * @returns {Promise<Object>} 項目資料
+ */
+export function getItem(id) {
+  return get(QUOTE_API.ITEM_DETAIL(id))
+}
+
+/**
+ * 建立項目
+ * @param {Object} data - 項目資料
+ * @returns {Promise<Object>} 建立的項目
+ */
+export function createItem(data) {
+  return post(QUOTE_API.ITEMS, data)
+}
+
+/**
+ * 更新項目
+ * @param {number} id - 項目 ID
+ * @param {Object} data - 更新資料
+ * @returns {Promise<Object>} 更新後的項目
+ */
+export function updateItem(id, data) {
+  return put(QUOTE_API.ITEM_DETAIL(id), data)
+}
+
+/**
+ * 刪除項目
+ * @param {number} id - 項目 ID
+ * @returns {Promise<void>}
+ */
+export function deleteItem(id) {
+  return del(QUOTE_API.ITEM_DETAIL(id))
+}
+
+// ==========================================
 // 範本 CRUD
 // ==========================================
 
@@ -230,6 +282,11 @@ export default {
   exportQuotePDF,
   exportQuoteExcel,
   batchExportQuotes,
+  getItems,
+  getItem,
+  createItem,
+  updateItem,
+  deleteItem,
   getTemplates,
   getTemplate,
   createTemplate,

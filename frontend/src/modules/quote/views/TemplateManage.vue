@@ -348,21 +348,47 @@ table {
     >
       <i class="fa-solid fa-check-circle mr-2"></i>{{ successMessage }}
     </div>
+
+    <!-- 錯誤提示 -->
+    <div
+      v-if="error"
+      class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <i class="fa-solid fa-exclamation-circle mr-2"></i>{{ error }}
+        </div>
+        <button @click="error = null" class="ml-4 text-white hover:text-gray-200">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 載入指示器 -->
+    <div
+      v-if="loading"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg p-6 flex flex-col items-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p class="text-gray-700 font-semibold">處理中...</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   getItems,
-  addItem as addItemToStorage,
+  createItem,
   updateItem,
   deleteItem,
   getTemplates,
-  addTemplate as addTemplateToStorage,
+  createTemplate,
   updateTemplate,
   deleteTemplate,
-} from '@/utils/dataManager';
+} from '@/modules/quote/api/quoteApi';
 
 // Tab 控制
 const activeTab = ref('items');
@@ -381,6 +407,11 @@ const isCreatingNew = ref(false);
 // ========== 通用 ========== //
 const showSuccess = ref(false);
 const successMessage = ref('');
+const loadingCount = ref(0);
+const error = ref(null);
+
+// 計算屬性：只要有任何請求在進行中就顯示載入動畫
+const loading = computed(() => loadingCount.value > 0);
 
 // 載入資料
 onMounted(() => {
@@ -388,20 +419,48 @@ onMounted(() => {
   loadTemplates();
 });
 
-function loadItems() {
-  items.value = getItems();
+async function loadItems() {
+  try {
+    loadingCount.value++;
+    error.value = null;
+    const response = await getItems();
+    items.value = response.data || response;
+  } catch (err) {
+    error.value = '載入項目失敗：' + err.message;
+    console.error('載入項目失敗:', err);
+  } finally {
+    loadingCount.value--;
+  }
 }
 
-function loadTemplates() {
-  templates.value = getTemplates();
+async function loadTemplates() {
+  try {
+    loadingCount.value++;
+    error.value = null;
+    const response = await getTemplates();
+    templates.value = response.data || response;
+  } catch (err) {
+    error.value = '載入模板失敗：' + err.message;
+    console.error('載入模板失敗:', err);
+  } finally {
+    loadingCount.value--;
+  }
 }
 
 // ========== 一般項目 CRUD ========== //
-function addItem() {
-  addItemToStorage(itemForm.value);
-  loadItems();
-  itemForm.value = { name: '', quantity: 1, unit: '', price: 0 };
-  showSuccessMessage('項目已新增！');
+async function addItem() {
+  try {
+    loadingCount.value++;
+    await createItem(itemForm.value);
+    await loadItems();
+    itemForm.value = { name: '', quantity: 1, unit: '', price: 0 };
+    showSuccessMessage('項目已新增！');
+  } catch (err) {
+    error.value = '新增項目失敗：' + err.message;
+    console.error('新增項目失敗:', err);
+  } finally {
+    loadingCount.value--;
+  }
 }
 
 function startEditItem(item) {
@@ -409,30 +468,57 @@ function startEditItem(item) {
   editItemForm.value = { ...item };
 }
 
-function saveEditItem() {
-  updateItem(editItemId.value, editItemForm.value);
-  loadItems();
-  editItemId.value = null;
-  showSuccessMessage('項目已更新！');
+async function saveEditItem() {
+  try {
+    loadingCount.value++;
+    await updateItem(editItemId.value, editItemForm.value);
+    await loadItems();
+    editItemId.value = null;
+    showSuccessMessage('項目已更新！');
+  } catch (err) {
+    error.value = '更新項目失敗：' + err.message;
+    console.error('更新項目失敗:', err);
+  } finally {
+    loadingCount.value--;
+  }
 }
 
 function cancelEditItem() {
   editItemId.value = null;
 }
 
-function removeItem(id) {
+async function removeItem(id) {
   if (confirm('確定要刪除此項目嗎？')) {
-    deleteItem(id);
-    loadItems();
-    showSuccessMessage('項目已刪除！');
+    try {
+      loadingCount.value++;
+      await deleteItem(id);
+      await loadItems();
+      showSuccessMessage('項目已刪除！');
+    } catch (err) {
+      error.value = '刪除項目失敗：' + err.message;
+      console.error('刪除項目失敗:', err);
+    } finally {
+      loadingCount.value--;
+    }
   }
 }
 
 // ========== 自定義模板 CRUD ========== //
 function selectTemplate(template) {
   isCreatingNew.value = false;
+
+  // 轉換欄位格式：後端格式 (field_label, field_value) → 前端格式 (label, value)
+  const convertedFields = template.fields ? template.fields.map(field => ({
+    id: field.id,
+    label: field.field_label || field.label || '',
+    value: field.field_value || field.value || '',
+  })) : [];
+
   // 使用 deep copy 避免直接修改原物件
-  activeTemplate.value = JSON.parse(JSON.stringify(template));
+  activeTemplate.value = {
+    ...JSON.parse(JSON.stringify(template)),
+    fields: convertedFields,
+  };
 }
 
 function createNewTemplate() {
@@ -462,31 +548,61 @@ function removeField(fieldId) {
   }
 }
 
-function saveTemplate() {
+async function saveTemplate() {
   if (!activeTemplate.value) return;
 
-  if (isCreatingNew.value) {
-    // 移除暫時的 new-id
-    const { id, ...newTemplate } = activeTemplate.value;
-    addTemplateToStorage(newTemplate);
-    showSuccessMessage('模板已新增！');
-  } else {
-    updateTemplate(activeTemplate.value.id, activeTemplate.value);
-    showSuccessMessage('模板已更新！');
+  try {
+    loadingCount.value++;
+
+    // 轉換欄位格式：前端格式 (label, value) → 後端格式 (field_label, field_value)
+    const convertedFields = activeTemplate.value.fields.map(field => ({
+      field_key: field.label.toLowerCase().replace(/\s+/g, '_'),
+      field_label: field.label,
+      field_type: 'text',
+      field_value: field.value,
+      field_options: null,
+      is_required: false,
+    }));
+
+    const templateData = {
+      name: activeTemplate.value.name,
+      fields: convertedFields,
+    };
+
+    if (isCreatingNew.value) {
+      await createTemplate(templateData);
+      showSuccessMessage('模板已新增！');
+    } else {
+      await updateTemplate(activeTemplate.value.id, templateData);
+      showSuccessMessage('模板已更新！');
+    }
+
+    await loadTemplates();
+    activeTemplate.value = null;
+    isCreatingNew.value = false;
+  } catch (err) {
+    error.value = '儲存模板失敗：' + err.message;
+    console.error('儲存模板失敗:', err);
+  } finally {
+    loadingCount.value--;
   }
-  
-  loadTemplates();
-  activeTemplate.value = null;
-  isCreatingNew.value = false;
 }
 
-function deleteActiveTemplate() {
+async function deleteActiveTemplate() {
   if (!activeTemplate.value || isCreatingNew.value) return;
   if (confirm(`確定要刪除模板「${activeTemplate.value.name}」嗎？`)) {
-    deleteTemplate(activeTemplate.value.id);
-    showSuccessMessage('模板已刪除！');
-    loadTemplates();
-    activeTemplate.value = null;
+    try {
+      loadingCount.value++;
+      await deleteTemplate(activeTemplate.value.id);
+      showSuccessMessage('模板已刪除！');
+      await loadTemplates();
+      activeTemplate.value = null;
+    } catch (err) {
+      error.value = '刪除模板失敗：' + err.message;
+      console.error('刪除模板失敗:', err);
+    } finally {
+      loadingCount.value--;
+    }
   }
 }
 

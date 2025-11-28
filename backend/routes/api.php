@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\QuoteController;
+use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ActivityLogController;
@@ -65,6 +66,21 @@ Route::middleware('auth:sanctum')->group(function () {
         // 匯出
         Route::get('/{id}/pdf', [QuoteController::class, 'exportPdf']);
         Route::get('/{id}/excel', [QuoteController::class, 'exportExcel']);
+    });
+
+    // ==========================================
+    // 一般項目相關路由
+    // ==========================================
+    Route::prefix('quote-items')->group(function () {
+        // 批次操作
+        Route::post('/batch-delete', [ItemController::class, 'batchDelete']);
+
+        // CRUD
+        Route::get('/', [ItemController::class, 'index']);
+        Route::post('/', [ItemController::class, 'store']);
+        Route::get('/{id}', [ItemController::class, 'show']);
+        Route::put('/{id}', [ItemController::class, 'update']);
+        Route::delete('/{id}', [ItemController::class, 'destroy']);
     });
 
     // ==========================================

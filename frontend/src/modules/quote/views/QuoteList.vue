@@ -39,25 +39,25 @@ table {
             <div class="flex-1">
               <h3 class="text-xl font-bold text-gray-800 mb-2">
                 <i class="fa-solid fa-file-invoice mr-2 text-blue-600"></i>
-                {{ quote.customerName }}
+                {{ quote.customer_name || quote.customerName }}
               </h3>
               <div class="grid md:grid-cols-2 gap-2 text-sm text-gray-600">
                 <div>
                   <i class="fa-solid fa-calendar mr-2"></i>
-                  <span>日期：{{ formatDate(quote.date) }}</span>
+                  <span>日期：{{ formatDate(quote.quote_date || quote.date) }}</span>
                 </div>
-                <div v-if="quote.quotationNumber">
+                <div v-if="quote.quote_number || quote.quotationNumber">
                   <i class="fa-solid fa-hashtag mr-2"></i>
-                  <span>單號：{{ quote.quotationNumber }}</span>
+                  <span>單號：{{ quote.quote_number || quote.quotationNumber }}</span>
                 </div>
-                <div v-if="quote.contactPhone">
+                <div v-if="quote.contact_phone || quote.contactPhone">
                   <i class="fa-solid fa-phone mr-2"></i>
-                  <span>電話：{{ quote.contactPhone }}</span>
+                  <span>電話：{{ quote.contact_phone || quote.contactPhone }}</span>
                 </div>
                 <div>
                   <i class="fa-solid fa-dollar-sign mr-2"></i>
                   <span class="font-semibold text-blue-600"
-                    >總金額：{{ quote.total.toLocaleString() }} 元</span
+                    >總金額：{{ (quote.total || 0).toLocaleString() }} 元</span
                   >
                 </div>
               </div>
@@ -69,6 +69,13 @@ table {
                 title="查看詳情"
               >
                 <i class="fa-solid fa-eye"></i>
+              </button>
+              <button
+                @click="editQuote(quote.id)"
+                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                title="編輯"
+              >
+                <i class="fa-solid fa-edit"></i>
               </button>
               <button
                 @click="deleteQuoteData(quote.id)"
@@ -110,9 +117,9 @@ table {
 
           <!-- 時間戳記 -->
           <div class="mt-4 text-xs text-gray-400">
-            建立時間：{{ formatDateTime(quote.createdAt) }}
-            <span v-if="quote.updatedAt !== quote.createdAt" class="ml-4">
-              更新時間：{{ formatDateTime(quote.updatedAt) }}
+            建立時間：{{ formatDateTime(quote.created_at || quote.createdAt) }}
+            <span v-if="(quote.updated_at || quote.updatedAt) !== (quote.created_at || quote.createdAt)" class="ml-4">
+              更新時間：{{ formatDateTime(quote.updated_at || quote.updatedAt) }}
             </span>
           </div>
         </div>
@@ -146,24 +153,24 @@ table {
               <div class="space-y-2 text-sm">
                 <div>
                   <span class="text-gray-600">客戶名稱：</span>
-                  <span class="font-semibold">{{ selectedQuote.customerName }}</span>
+                  <span class="font-semibold">{{ selectedQuote.customer_name || selectedQuote.customerName }}</span>
                 </div>
-                <div v-if="selectedQuote.contactPhone">
+                <div v-if="selectedQuote.contact_phone || selectedQuote.contactPhone">
                   <span class="text-gray-600">聯絡電話：</span>
-                  <span class="font-semibold">{{ selectedQuote.contactPhone }}</span>
+                  <span class="font-semibold">{{ selectedQuote.contact_phone || selectedQuote.contactPhone }}</span>
                 </div>
               </div>
             </div>
             <div class="bg-gray-50 p-4 rounded-lg">
               <h4 class="font-semibold text-gray-700 mb-3">報價資訊</h4>
               <div class="space-y-2 text-sm">
-                <div v-if="selectedQuote.quotationNumber">
+                <div v-if="selectedQuote.quote_number || selectedQuote.quotationNumber">
                   <span class="text-gray-600">報價單號：</span>
-                  <span class="font-semibold">{{ selectedQuote.quotationNumber }}</span>
+                  <span class="font-semibold">{{ selectedQuote.quote_number || selectedQuote.quotationNumber }}</span>
                 </div>
                 <div>
                   <span class="text-gray-600">報價日期：</span>
-                  <span class="font-semibold">{{ formatDate(selectedQuote.date) }}</span>
+                  <span class="font-semibold">{{ formatDate(selectedQuote.quote_date || selectedQuote.date) }}</span>
                 </div>
               </div>
             </div>
@@ -203,7 +210,7 @@ table {
                     class="hover:bg-gray-50 transition-colors"
                   >
                     <td class="px-4 py-3 text-center text-gray-600 font-semibold">
-                      {{ item.id }}
+                      {{ index + 1 }}
                     </td>
                     <td class="px-4 py-3 text-gray-800" v-html="item.name"></td>
                     <td class="px-4 py-3 text-center text-gray-600">
@@ -229,7 +236,7 @@ table {
             <div class="flex justify-between items-center">
               <span class="text-lg font-semibold text-gray-800">總金額：</span>
               <span class="text-2xl font-bold text-blue-600"
-                >{{ selectedQuote.total.toLocaleString() }} 元</span
+                >{{ (selectedQuote.total || 0).toLocaleString() }} 元</span
               >
             </div>
           </div>
@@ -255,9 +262,11 @@ table {
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { getQuotes, deleteQuote } from '@/utils/dataManager';
+import { useRouter } from 'vue-router';
+import { useQuote } from '../composables/useQuote';
 
-const quotes = ref([]);
+const router = useRouter();
+const { quotes, loading, error, fetchQuotes, deleteQuote: deleteQuoteApi } = useQuote();
 const selectedQuote = ref(null);
 const showDetailModal = ref(false);
 
@@ -270,16 +279,23 @@ onMounted(() => {
   loadQuotes();
 });
 
-function loadQuotes() {
-  quotes.value = getQuotes().sort((a, b) => {
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
+async function loadQuotes() {
+  try {
+    await fetchQuotes({ sort_by: 'created_at', sort_order: 'desc' });
+  } catch (err) {
+    console.error('載入報價單失敗:', err);
+  }
 }
 
 // 查看報價單詳情
 function viewQuote(quote) {
   selectedQuote.value = quote;
   showDetailModal.value = true;
+}
+
+// 編輯報價單
+function editQuote(id) {
+  router.push(`/quote/edit/${id}`);
 }
 
 // 關閉詳情對話框
@@ -289,11 +305,15 @@ function closeDetailModal() {
 }
 
 // 刪除報價單
-function deleteQuoteData(id) {
+async function deleteQuoteData(id) {
   if (confirm('確定要刪除此報價單嗎？此操作無法復原。')) {
-    deleteQuote(id);
-    loadQuotes();
-    showSuccessMessage('報價單已刪除！');
+    try {
+      await deleteQuoteApi(id);
+      await loadQuotes();
+      showSuccessMessage('報價單已刪除！');
+    } catch (err) {
+      console.error('刪除報價單失敗:', err);
+    }
   }
 }
 

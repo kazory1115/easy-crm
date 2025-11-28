@@ -360,11 +360,19 @@ export function useTemplate() {
         templates.value = getFromStorage(STORAGE_KEYS.TEMPLATES)
         return templates.value
       } else {
-        const response = await quoteApi.getTemplates(params)
-        templates.value = response.data || []
+        // 加上 paginate: false 以取得所有範本（不分頁）
+        console.log('🌐 [fetchTemplates] 發送 API 請求，參數:', { ...params, paginate: false })
+        const response = await quoteApi.getTemplates({ ...params, paginate: false })
+        console.log('🌐 [fetchTemplates] API 回應:', response)
+
+        // 如果 response 直接是陣列，則使用它；否則取 response.data
+        templates.value = Array.isArray(response) ? response : (response.data || [])
+        console.log('✅ [fetchTemplates] 設定的 templates.value:', templates.value)
+
         return templates.value
       }
     } catch (err) {
+      console.error('❌ [fetchTemplates] 錯誤:', err)
       error.value = err
       appStore.showError('取得範本列表失敗')
       throw err
