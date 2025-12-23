@@ -1,26 +1,30 @@
-services:
-  # ==========================================
-  # Nginx Web Server
-  # ==========================================
-  nginx:
-    image: nginx:latest
-    container_name: easy-crm-nginx
-    restart: always
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./:/var/www/html
-    ports:
-      - '${NGINX_PORT}:80'
-    depends_on:
-      - php
-    networks:
-      - easy-crm-network
+﻿services:
+  # MySQL 資料庫（MVP 只保留單一主庫）
+  mysql:
+    image: mysql:8.0
+    container_name: easy-crm-mysql
+    restart: unless-stopped
     environment:
-      - TZ=${TIMEZONE}
+      # 建庫與帳號設定，對應 .env
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      TZ: ${TIMEZONE}
+    ports:
+      # 對外連接埠（本機->容器）
+      - "${DB_EXTERNAL_PORT}:3306"
+    volumes:
+      # 資料持久化
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      # 簡單健康檢查，讓其他服務可判斷資料庫狀態
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # ==========================================
-  # PHP-FPM Application Server
-  # ==========================================
+  # PHP-FPM 應用服務（Laravel）
   php:
     build:
       context: .
@@ -30,134 +34,42 @@ services:
         PHP_UPLOAD_MAX_FILESIZE: ${PHP_UPLOAD_MAX_FILESIZE}
         PHP_POST_MAX_SIZE: ${PHP_POST_MAX_SIZE}
     container_name: easy-crm-php
-    restart: always
+    restart: unless-stopped
+    # 進入容器時的工作目錄
+    working_dir: /var/www/html/backend
     volumes:
-      - ./:/var/www/html
+      # 掛載後端程式碼
       - ./backend:/var/www/html/backend
     environment:
-      - DB_CONNECTION=${DB_CONNECTION}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_DATABASE=${DB_DATABASE}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - TZ=${TIMEZONE}
+      # Laravel 連線用 DB 參數
+      DB_CONNECTION: ${DB_CONNECTION}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      TZ: ${TIMEZONE}
     depends_on:
       - mysql
-      - mysql_test
-      - mysql_ecic
-    networks:
-      - easy-crm-network
 
-  # ==========================================
-  # MySQL - 主資料庫
-  # ==========================================
-  mysql:
-    image: mysql:8.0
-    container_name: easy-crm-mysql
-    restart: always
-    environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD?You must set a DB_ROOT_PASSWORD in the .env file}
-      TZ: ${TIMEZONE}
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+  # Nginx 反向代理（前端靜態檔 + API）
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: easy-crm-nginx
+    restart: unless-stopped
     volumes:
-      - mysql_data:/var/lib/mysql
+      # Nginx 設定
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # 後端 public 與前端 dist
+      - ./backend:/var/www/html/backend
+      - ./frontend/dist:/var/www/html/frontend/dist
     ports:
-      - '${DB_EXTERNAL_PORT}:3306'
-    networks:
-      - easy-crm-network
-    healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p${DB_ROOT_PASSWORD}']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ==========================================
-  # MySQL - 測試資料庫
-  # ==========================================
-  mysql_test:
-    image: mysql:8.0
-    container_name: easy-crm-mysql-test
-    restart: always
-    environment:
-      MYSQL_DATABASE: ${DB_TEST_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${DB_TEST_ROOT_PASSWORD?You must set a DB_TEST_ROOT_PASSWORD in the .env file}
-      TZ: ${TIMEZONE}
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    volumes:
-      - mysql_test_data:/var/lib/mysql
-    ports:
-      - '${DB_TEST_EXTERNAL_PORT}:3306'
-    networks:
-      - easy-crm-network
-    healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p${DB_TEST_ROOT_PASSWORD}']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ==========================================
-  # MySQL - ECIC 資料庫
-  # ==========================================
-  mysql_ecic:
-    image: mysql:8.0
-    container_name: easy-crm-mysql-ecic
-    restart: always
-    environment:
-      MYSQL_DATABASE: ${DB_ECIC_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${DB_ECIC_ROOT_PASSWORD?You must set a DB_ECIC_ROOT_PASSWORD in the .env file}
-      TZ: ${TIMEZONE}
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    volumes:
-      - mysql_ecic_data:/var/lib/mysql
-    ports:
-      - '${DB_ECIC_EXTERNAL_PORT}:3306'
-    networks:
-      - easy-crm-network
-    healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p${DB_ECIC_ROOT_PASSWORD}']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ==========================================
-  # phpMyAdmin - MySQL 管理工具
-  # ==========================================
-  phpmyadmin:
-    image: phpmyadmin:latest
-    container_name: easy-crm-phpmyadmin
-    restart: always
-    environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD?You must set a DB_ROOT_PASSWORD in the .env file}
-      TZ: ${TIMEZONE}
-    ports:
-      - '${PHPMYADMIN_PORT}:80'
+      # 對外 HTTP 入口
+      - "${NGINX_PORT}:80"
     depends_on:
-      - mysql
-      - mysql_test
-      - mysql_ecic
-    networks:
-      - easy-crm-network
+      - php
 
-# ==========================================
-# Networks
-# ==========================================
-networks:
-  easy-crm-network:
-    driver: bridge
-    name: easy-crm-network
-
-# ==========================================
-# Volumes
-# ==========================================
 volumes:
+  # MySQL 資料卷
   mysql_data:
     name: easy-crm-mysql-data
-  mysql_test_data:
-    name: easy-crm-mysql-test-data
-  mysql_ecic_data:
-    name: easy-crm-mysql-ecic-data

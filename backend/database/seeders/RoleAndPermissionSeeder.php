@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -14,92 +13,71 @@ class RoleAndPermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        // 重置快取的角色和權限
+        // 清除快取的角色/權限
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // === 建立權限 ===
-        // 用戶管理權限
-        Permission::create(['name' => 'view users']);
-        Permission::create(['name' => 'create users']);
-        Permission::create(['name' => 'edit users']);
-        Permission::create(['name' => 'delete users']);
+        // 以模組為單位的權限定義（與前端一致）
+        $permissionNames = [
+            // Quote / Template / Items
+            'quote.view',
+            'quote.create',
+            'quote.edit',
+            'quote.delete',
+            'quote.template.manage',
+            'quote.item.manage',
 
-        // 客戶管理權限
-        Permission::create(['name' => 'view customers']);
-        Permission::create(['name' => 'create customers']);
-        Permission::create(['name' => 'edit customers']);
-        Permission::create(['name' => 'delete customers']);
+            // Staff / Role
+            'staff.view',
+            'staff.create',
+            'staff.edit',
+            'staff.delete',
+            'role.manage',
 
-        // 聯絡人管理權限
-        Permission::create(['name' => 'view contacts']);
-        Permission::create(['name' => 'create contacts']);
-        Permission::create(['name' => 'edit contacts']);
-        Permission::create(['name' => 'delete contacts']);
+            // CRM
+            'crm.view',
+            'crm.create',
+            'crm.edit',
+            'crm.delete',
 
-        // 商機管理權限
-        Permission::create(['name' => 'view opportunities']);
-        Permission::create(['name' => 'create opportunities']);
-        Permission::create(['name' => 'edit opportunities']);
-        Permission::create(['name' => 'delete opportunities']);
+            // Inventory
+            'inventory.view',
+            'inventory.create',
+            'inventory.edit',
+            'inventory.delete',
 
-        // 產品管理權限
-        Permission::create(['name' => 'view products']);
-        Permission::create(['name' => 'create products']);
-        Permission::create(['name' => 'edit products']);
-        Permission::create(['name' => 'delete products']);
+            // Report
+            'report.view',
+            'report.export',
+        ];
 
-        // 報表權限
-        Permission::create(['name' => 'view reports']);
-        Permission::create(['name' => 'export reports']);
+        foreach ($permissionNames as $name) {
+            Permission::firstOrCreate(['name' => $name]);
+        }
 
-        // 系統設定權限
-        Permission::create(['name' => 'manage settings']);
-        Permission::create(['name' => 'manage roles']);
+        // 角色
+        $superAdmin = Role::firstOrCreate(['name' => 'super-admin']);
+        $admin = Role::firstOrCreate(['name' => 'admin']);
+        $manager = Role::firstOrCreate(['name' => 'manager']);
+        $staff = Role::firstOrCreate(['name' => 'staff']);
 
-        // === 建立角色並分配權限 ===
+        // 權限綁定
+        $superAdmin->syncPermissions(Permission::all());
 
-        // 超級管理員 - 擁有所有權限
-        $superAdmin = Role::create(['name' => 'super-admin']);
-        $superAdmin->givePermissionTo(Permission::all());
+        $admin->syncPermissions($permissionNames);
 
-        // 管理員 - 擁有大部分權限，但不能管理系統設定
-        $admin = Role::create(['name' => 'admin']);
-        $admin->givePermissionTo([
-            'view users', 'create users', 'edit users',
-            'view customers', 'create customers', 'edit customers', 'delete customers',
-            'view contacts', 'create contacts', 'edit contacts', 'delete contacts',
-            'view opportunities', 'create opportunities', 'edit opportunities', 'delete opportunities',
-            'view products', 'create products', 'edit products', 'delete products',
-            'view reports', 'export reports',
+        $manager->syncPermissions([
+            'quote.view', 'quote.create', 'quote.edit', 'quote.template.manage', 'quote.item.manage',
+            'crm.view', 'crm.create', 'crm.edit',
+            'inventory.view', 'inventory.create', 'inventory.edit',
+            'report.view',
+            'staff.view'
         ]);
 
-        // 經理 - 可以查看和管理客戶、商機、報表
-        $manager = Role::create(['name' => 'manager']);
-        $manager->givePermissionTo([
-            'view users',
-            'view customers', 'create customers', 'edit customers',
-            'view contacts', 'create contacts', 'edit contacts',
-            'view opportunities', 'create opportunities', 'edit opportunities',
-            'view products',
-            'view reports', 'export reports',
-        ]);
-
-        // 業務 - 主要負責客戶和商機
-        $sales = Role::create(['name' => 'sales']);
-        $sales->givePermissionTo([
-            'view customers', 'create customers', 'edit customers',
-            'view contacts', 'create contacts', 'edit contacts',
-            'view opportunities', 'create opportunities', 'edit opportunities',
-            'view products',
-            'view reports',
-        ]);
-
-        // 客服 - 主要負責客戶和聯絡人
-        $customerService = Role::create(['name' => 'customer-service']);
-        $customerService->givePermissionTo([
-            'view customers', 'edit customers',
-            'view contacts', 'create contacts', 'edit contacts',
-            'view products',
+        $staff->syncPermissions([
+            'quote.view', 'quote.create',
+            'crm.view',
+            'inventory.view',
+            'report.view'
         ]);
     }
 }

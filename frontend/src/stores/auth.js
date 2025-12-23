@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 認證 Store
  *
  * 管理使用者認證狀態、登入登出、權限檢查
@@ -10,7 +10,7 @@ import { useRouter } from 'vue-router'
 import { post, get } from '@/utils/http'
 
 export const useAuthStore = defineStore('auth', () => {
-  // useRouter 必須在 setup 函式頂層呼叫
+  // useRouter 必須在 setup 函式內呼叫
   const router = useRouter()
 
   // ==========================================
@@ -30,7 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => isLoggedIn.value) // Alias for consistency
 
   const isAdmin = computed(() => {
-    return roles.value.includes('admin') || roles.value.includes('super_admin')
+    return roles.value.includes('admin') || roles.value.includes('super-admin') || roles.value.includes('super_admin')
   })
 
   const displayName = computed(() => {
@@ -52,25 +52,26 @@ export const useAuthStore = defineStore('auth', () => {
         device_name: credentials.device_name || 'web-browser'
       })
 
-      // API 回應格式: { user: {...}, token: '...' }
-      const { user: userData, token: authToken } = response
-
-      // 模擬權限和角色（實際應該從 API 回傳）
-      const mockPermissions = ['quote.view', 'quote.create', 'quote.edit', 'quote.delete', 'quote.template.manage', 'quote.item.manage']
-      const mockRoles = ['user', 'editor']
+      // API 回傳格式: { user, token, roles, permissions }
+      const {
+        user: userData,
+        token: authToken,
+        roles: roleList = [],
+        permissions: permissionList = []
+      } = response
 
       // 更新 store
       setToken(authToken)
       setUser(userData)
-      setPermissions(mockPermissions)
-      setRoles(mockRoles)
+      setPermissions(Array.isArray(permissionList) ? permissionList : [])
+      setRoles(Array.isArray(roleList) ? roleList : [])
 
       console.log('[Auth] Login successful')
       return Promise.resolve()
     } catch (error) {
       console.error('[Auth] Login failed:', error)
-      clearAuth() // 登入失敗時清除所有舊資料
-      throw new Error(error.response?.data?.message || '登入失敗，請檢查您的帳號或密碼。')
+      clearAuth() // 登入失敗時清掉所有認證資料
+      throw new Error(error.response?.data?.message || '登入失敗，請檢查帳號或密碼。')
     }
   }
 
@@ -82,11 +83,11 @@ export const useAuthStore = defineStore('auth', () => {
       await post('/auth/logout')
     } catch (error) {
       console.error('[Auth] Logout API failed:', error)
-      // 即使 API 失敗，仍然清除本地狀態
+      // 即使 API 失敗，也要清掉本地狀態
     }
 
     clearAuth()
-    // 使用 router 實例進行重定向
+    // 使用 router 進行導向
     // 確保在客戶端環境下執行
     if (typeof window !== 'undefined') {
       router.push('/login')
@@ -162,7 +163,7 @@ export const useAuthStore = defineStore('auth', () => {
       clearAuth()
     } else {
       console.log('[Auth] Session restored for user:', user.value.email)
-      // 可選：在此處呼叫 API 驗證 token 有效性
+      // 可選：此處呼叫 /auth/me 重新同步權限
     }
   }
 
