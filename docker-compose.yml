@@ -69,6 +69,22 @@
     depends_on:
       - php
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: easy-crm-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql          # 連線到 mysql 服務
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1         # 允許輸入其他 DB 主機
+      UPLOAD_LIMIT: 256M       # 可調整匯入檔案限制
+      TZ: ${TIMEZONE}
+    depends_on:
+      - mysql
+    ports:
+      # phpMyAdmin 對外端口
+      - "${PMA_PORT}:80"    
+
 volumes:
   # MySQL 資料卷
   mysql_data:

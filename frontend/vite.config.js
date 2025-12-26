@@ -12,5 +12,12 @@ export default defineConfig({
   },
   server: {
     allowedHosts: ['25ba2484bb2d.ngrok-free.app'],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8180',
+        changeOrigin: true,
+      },
+    },
   },
 });
+
