@@ -1,4 +1,4 @@
-﻿# PHP-FPM 映像檔（只保留 MVP 必要套件）
+﻿# PHP-FPM 映像檔（只保留 MVP 必要套件 + intl）
 FROM php:8.2-fpm
 
 # 可由 docker-compose 傳入的建置參數
@@ -13,7 +13,7 @@ ENV TZ=${TIMEZONE} \
     PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE} \
     PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE}
 
-# 安裝 PHP 擴充與基礎工具（不含不必要套件）
+# 安裝 PHP 擴充與基礎工具（加上 intl）
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     unzip \
+    libicu-dev \
     && docker-php-ext-install \
       pdo_mysql \
       mbstring \
@@ -31,6 +32,7 @@ RUN apt-get update && apt-get install -y \
       bcmath \
       gd \
       zip \
+      intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 寫入 PHP 設定檔（對應 .env 參數）

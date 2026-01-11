@@ -8,11 +8,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Traits\LogsActivity; // Added LogsActivity trait
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, HasRoles;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles, LogsActivity; // Added LogsActivity trait
 
     /**
      * The attributes that are mass assignable.

@@ -19,9 +19,12 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_filter(array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:8180,http://localhost:5173,http://localhost:3000,http://127.0.0.1:8180,http://127.0.0.1:5173,http://127.0.0.1:3000')))),
+    'allowed_origins' => [],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        // Allow requests from localhost on any port for local development
+        '/^http:\/\/localhost(:\d+)?$/',
+    ],
 
     'allowed_headers' => ['*'],
 

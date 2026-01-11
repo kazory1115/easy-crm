@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\LogsActivity; // Added LogsActivity trait
 
 class Item extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity; // Added LogsActivity trait
 
     protected $fillable = [
         'name',
@@ -44,14 +45,6 @@ class Item extends Model
     public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    /**
-     * 關聯：操作紀錄
-     */
-    public function logs()
-    {
-        return $this->hasMany(ItemLog::class);
     }
 
     /**

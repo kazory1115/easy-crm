@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\Api\OrderController; // Added OrderController
 
 /*
 |--------------------------------------------------------------------------
@@ -66,6 +67,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // 匯出
         Route::get('/{id}/pdf', [QuoteController::class, 'exportPdf']);
         Route::get('/{id}/excel', [QuoteController::class, 'exportExcel']);
+
+        // 轉換為訂單
+        Route::post('/{id}/convert-to-order', [QuoteController::class, 'convertToOrder']);
     });
 
     // ==========================================
@@ -92,6 +96,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [TemplateController::class, 'show']);
         Route::put('/{id}', [TemplateController::class, 'update']);
         Route::delete('/{id}', [TemplateController::class, 'destroy']);
+    });
+
+    // ==========================================
+    // 訂單相關路由
+    // ==========================================
+    Route::prefix('orders')->group(function () {
+        Route::get('/', [OrderController::class, 'index']);
+        Route::post('/', [OrderController::class, 'store']);
+        Route::get('/{id}', [OrderController::class, 'show']);
+        Route::put('/{id}', [OrderController::class, 'update']);
+        Route::delete('/{id}', [OrderController::class, 'destroy']);
     });
 
     // ==========================================

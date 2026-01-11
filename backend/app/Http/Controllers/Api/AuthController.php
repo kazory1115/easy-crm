@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers\Api;
 
@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -27,26 +28,36 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        Log::debug('--- [Login Attempt] ---');
+        Log::debug('Request data:', $request->all());
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
+        Log::debug('Validation passed.');
 
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            Log::warning('Authentication failed for email: ' . $request->email);
             throw ValidationException::withMessages([
                 'email' => ['提供的帳密不正確。'],
             ]);
         }
+        Log::debug('Authentication successful for user: ' . $user->email);
 
         // 產生 token
         $token = $user->createToken($request->device_name ?? 'default-device')->plainTextToken;
+        Log::debug('Token created successfully.');
 
-        return response()->json(array_merge(
+        $payload = array_merge(
             $this->buildAuthPayload($user),
             ['token' => $token]
-        ));
+        );
+        
+        Log::debug('--- [Login Success] ---');
+        return response()->json($payload);
     }
 
     /**

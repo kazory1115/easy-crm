@@ -115,7 +115,7 @@ trait LogsActivity
     /**
      * 取得外鍵名稱
      */
-    protected function getForeignKey()
+    public function getForeignKey()
     {
         return Str::snake(class_basename($this)) . '_id';
     }

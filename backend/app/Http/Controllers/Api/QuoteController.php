@@ -5,11 +5,19 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Quote;
 use App\Models\QuoteItem;
+use App\Services\QuoteService; // Added QuoteService
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class QuoteController extends Controller
 {
+    protected QuoteService $quoteService; // Injected QuoteService
+
+    public function __construct(QuoteService $quoteService)
+    {
+        $this->quoteService = $quoteService;
+    }
+
     /**
      * 取得報價單列表
      */
@@ -79,62 +87,22 @@ class QuoteController extends Controller
             'items.*.price' => 'required|numeric|min:0',
             'items.*.fields' => 'nullable|array',
             'items.*.notes' => 'nullable|string',
+            'tax_rate' => 'nullable|numeric|min:0|max:1', // Added tax_rate validation
         ]);
 
-        DB::beginTransaction();
+        $quote = $this->quoteService->createQuote(
+            array_filter($validated, fn($key) => $key !== 'items', ARRAY_FILTER_USE_KEY),
+            $validated['items'],
+            auth()->id()
+        );
 
-        try {
-            // 建立報價單
-            $quote = Quote::create([
-                'customer_id' => $validated['customer_id'] ?? null,
-                'customer_name' => $validated['customer_name'],
-                'contact_phone' => $validated['contact_phone'] ?? null,
-                'contact_email' => $validated['contact_email'] ?? null,
-                'project_name' => $validated['project_name'] ?? null,
-                'quote_date' => $validated['quote_date'],
-                'valid_until' => $validated['valid_until'] ?? null,
-                'notes' => $validated['notes'] ?? null,
-                'status' => 'draft',
-                'created_by' => auth()->id(),
-            ]);
+        // 重新載入關聯資料
+        $quote->load(['items', 'customer']);
 
-            // 建立報價單項目
-            foreach ($validated['items'] as $index => $itemData) {
-                QuoteItem::create([
-                    'quote_id' => $quote->id,
-                    'item_id' => $itemData['item_id'] ?? null,
-                    'sort_order' => $index + 1,
-                    'type' => $itemData['type'],
-                    'name' => $itemData['name'],
-                    'description' => $itemData['description'] ?? null,
-                    'quantity' => $itemData['quantity'],
-                    'unit' => $itemData['unit'],
-                    'price' => $itemData['price'],
-                    'fields' => $itemData['fields'] ?? null,
-                    'notes' => $itemData['notes'] ?? null,
-                ]);
-            }
-
-            // 計算總金額
-            $quote->calculateTotal();
-
-            DB::commit();
-
-            // 重新載入關聯資料
-            $quote->load(['items', 'customer']);
-
-            return response()->json([
-                'message' => '報價單建立成功',
-                'data' => $quote,
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => '報價單建立失敗',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => '報價單建立成功',
+            'data' => $quote,
+        ], 201);
     }
 
     /**
@@ -163,59 +131,23 @@ class QuoteController extends Controller
             'items.*.price' => 'required_with:items|numeric|min:0',
             'items.*.fields' => 'nullable|array',
             'items.*.notes' => 'nullable|string',
+            'tax_rate' => 'nullable|numeric|min:0|max:1', // Added tax_rate validation
         ]);
 
-        DB::beginTransaction();
+        $quote = $this->quoteService->updateQuote(
+            $quote,
+            array_filter($validated, fn($key) => $key !== 'items', ARRAY_FILTER_USE_KEY),
+            $validated['items'] ?? [], // Pass empty array if items are not present
+            auth()->id()
+        );
 
-        try {
-            // 更新報價單基本資料
-            $quote->fill(array_filter($validated, fn($key) => $key !== 'items', ARRAY_FILTER_USE_KEY));
-            $quote->updated_by = auth()->id();
-            $quote->save();
+        // 重新載入關聯資料
+        $quote->load(['items', 'customer']);
 
-            // 如果有傳入項目，則更新項目
-            if (isset($validated['items'])) {
-                // 刪除舊的項目
-                $quote->items()->delete();
-
-                // 建立新的項目
-                foreach ($validated['items'] as $index => $itemData) {
-                    QuoteItem::create([
-                        'quote_id' => $quote->id,
-                        'item_id' => $itemData['item_id'] ?? null,
-                        'sort_order' => $index + 1,
-                        'type' => $itemData['type'],
-                        'name' => $itemData['name'],
-                        'description' => $itemData['description'] ?? null,
-                        'quantity' => $itemData['quantity'],
-                        'unit' => $itemData['unit'],
-                        'price' => $itemData['price'],
-                        'fields' => $itemData['fields'] ?? null,
-                        'notes' => $itemData['notes'] ?? null,
-                    ]);
-                }
-
-                // 計算總金額
-                $quote->calculateTotal();
-            }
-
-            DB::commit();
-
-            // 重新載入關聯資料
-            $quote->load(['items', 'customer']);
-
-            return response()->json([
-                'message' => '報價單更新成功',
-                'data' => $quote,
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => '報價單更新失敗',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => '報價單更新成功',
+            'data' => $quote,
+        ]);
     }
 
     /**
@@ -331,5 +263,31 @@ class QuoteController extends Controller
         ];
 
         return response()->json(['data' => $stats]);
+    }
+
+    /**
+     * 將已核准的報價單轉換為訂單。
+     *
+     * @param Request $request
+     * @param int $id 報價單ID
+     * @return \Illuminate\Http\Response
+     */
+    public function convertToOrder(Request $request, $id)
+    {
+        $quote = Quote::findOrFail($id);
+
+        try {
+            $order = $this->quoteService->createOrderFromQuote($quote, auth()->id());
+
+            return response()->json([
+                'message' => '報價單已成功轉換為訂單',
+                'data' => $order,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => '轉換失敗',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

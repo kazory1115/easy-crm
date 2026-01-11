@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\LogsActivity; // Added LogsActivity trait
+use Illuminate\Support\Facades\DB; // Added DB facade for transactions
+use App\Services\StockService; // Added StockService
 
 class Quote extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity; // Added LogsActivity trait
 
     protected $fillable = [
         'quote_number',
@@ -110,12 +113,14 @@ class Quote extends Model
     }
 
     /**
-     * 關聯：操作紀錄
+     * 關聯：轉換後的訂單
      */
-    public function logs()
+    public function order()
     {
-        return $this->hasMany(QuoteLog::class);
+        return $this->hasOne(Order::class);
     }
+
+
 
     /**
      * Scope: 依狀態篩選
@@ -163,12 +168,124 @@ class Quote extends Model
     }
 
     /**
-     * 計算總金額
+     * 從已有的金額欄位更新最終總計
      */
-    public function calculateTotal()
+    public function updateFinalTotalFromPrecalculatedValues()
     {
-        $this->subtotal = $this->items->sum('amount');
         $this->total = $this->subtotal + $this->tax - $this->discount;
         $this->save();
+    }
+
+    /**
+     * 根據報價單品項重新計算所有金額（小計、稅金、總計）
+     */
+    public function recalculateTotal()
+    {
+        // 確保 items 關聯已載入
+        $this->load('items');
+
+        // 計算小計
+        $subtotal = $this->items->sum(function ($item) {
+            return $item->quantity * $item->unit_price;
+        });
+
+        // 取得稅率，如果 Quote 沒有 tax_rate，則預設為 0
+        $taxRate = $this->tax_rate ?? 0;
+
+        // 計算稅金
+        $tax = $subtotal * $taxRate;
+
+        // 計算總計 (假設 discount 已經是個定值，或從其他地方設定)
+        // 如果 discount 欄位在資料庫中不存在，需要處理預設值或調整邏輯
+        $discount = $this->discount ?? 0;
+        $total = $subtotal + $tax - $discount;
+
+        // 更新 Quote 模型
+        $this->subtotal = round($subtotal, 2);
+        $this->tax = round($tax, 2);
+        $this->total = round($total, 2);
+
+        $this->save(); // 儲存變更
+    }
+
+    /**
+     * 將已核准的報價單轉換為訂單
+     *
+     * @param int $userId 執行轉換的使用者ID
+     * @return Order
+     * @throws \Exception
+     */
+    public function convertToOrder(int $userId): Order
+    {
+        if ($this->status !== 'approved') {
+            throw new \Exception('只有已核准的報價單才能轉換為訂單。');
+        }
+
+        if ($this->order()->exists()) {
+            throw new \Exception('此報價單已被轉換為訂單。');
+        }
+
+        return DB::transaction(function () use ($userId) {
+            // 載入關聯項目以便建立訂單項目
+            $this->load('items');
+
+            // 建立訂單資料
+            $orderData = [
+                'quote_id'        => $this->id,
+                'customer_id'     => $this->customer_id,
+                'customer_name'   => $this->customer_name,
+                'contact_phone'   => $this->contact_phone,
+                'contact_email'   => $this->contact_email,
+                'project_name'    => $this->project_name,
+                'order_date'      => now(),
+                'due_date'        => $this->valid_until, // 可將報價單有效期限作為訂單到期日
+                'subtotal'        => $this->subtotal,
+                'tax_amount'      => $this->tax,
+                'discount_amount' => $this->discount,
+                'total_amount'    => $this->total,
+                'tax_rate'        => $this->tax_rate,
+                'status'          => 'confirmed', // 轉換後訂單狀態為已確認
+                'payment_status'  => 'unpaid',
+                'notes'           => $this->notes,
+                'created_by'      => $userId,
+                'updated_by'      => $userId,
+            ];
+
+            // 建立訂單
+            $order = Order::create($orderData);
+
+            // 建立訂單項目
+            $stockService = app(StockService::class); // Resolve StockService from container
+            foreach ($this->items as $quoteItem) {
+                $orderItemData = $quoteItem->toArray();
+                unset($orderItemData['id']); // 移除舊的ID
+                unset($orderItemData['quote_id']); // 移除舊的關聯
+                $orderItemData['order_id'] = $order->id; // 設定新的訂單關聯
+                $orderItemData['unit_price'] = $quoteItem->price; // 報價單項目使用 price, 訂單項目使用 unit_price
+                $orderItemData['subtotal'] = $quoteItem->quantity * $quoteItem->price; // 計算小計
+
+                OrderItem::create($orderItemData);
+
+                // --- 執行庫存扣減 ---
+                if ($quoteItem->item_id) {
+                    $stockService->deductStock(
+                        $quoteItem->item_id,
+                        $quoteItem->quantity,
+                        Order::class,
+                        $order->id,
+                        $userId,
+                        '由報價單轉換為訂單出庫'
+                    );
+                }
+                // --- 庫存扣減結束 ---
+            }
+
+            // 更新報價單狀態
+            $this->status = 'converted';
+            $this->updated_by = $userId;
+            $this->save();
+
+            return $order;
+        });
     }
 }
