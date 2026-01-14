@@ -14,9 +14,9 @@
         <div>
           <p class="text-sm font-medium text-gray-500">角色</p>
           <div class="flex flex-wrap gap-2 mt-1">
-            <span v-for="role in user.roles" :key="role"
+            <span v-for="role in user.roles" :key="role.name"
                   class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">
-              {{ role }}
+              {{ role.name }}
             </span>
           </div>
         </div>
