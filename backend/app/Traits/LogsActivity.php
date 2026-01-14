@@ -46,13 +46,18 @@ trait LogsActivity
         $ipAddress = $request ? $request->ip() : null;
         $userAgent = $request ? $request->userAgent() : null;
 
-        // 取得當前用戶
-        $userId = auth()->id();
+        // --- 核心修正 ---
+        // 取得當前用戶 (操作者)
+        $causerId = auth()->id();
+        // 動態判斷操作者欄位名稱
+        // UserLog 資料表使用 'operator_id' 作為操作者欄位，以避免與 'user_id' (被操作者) 衝突
+        // 其他 Log 資料表 (如 CustomerLog) 則使用 'user_id' 作為操作者欄位
+        $causerColumn = (get_class($this) === 'App\Models\User') ? 'operator_id' : 'user_id';
 
         // 準備資料
         $logData = [
-            $this->getForeignKey() => $this->id,
-            'user_id' => $userId,
+            $this->getForeignKey() => $this->id, // 被操作物件的外鍵 (例如: user_id, customer_id)
+            $causerColumn => $causerId,          // 操作者的外鍵 (例如: operator_id, user_id)
             'action' => $action,
             'description' => $description ?? $this->getDefaultDescription($action),
             'ip_address' => $ipAddress,
@@ -73,25 +78,24 @@ trait LogsActivity
             $logData['new_data'] = $newData ?? $this->attributesToArray();
         }
 
-        // 建立紀錄
+        // 建立特定模型的紀錄 (例如 UserLog, CustomerLog)
         $logModelClass::create($logData);
 
-        // 同時記錄到全域活動紀錄
-        $this->logToActivityLog($action, $logData);
+        // 同時記錄到全域活動紀錄，並明確傳遞 causer ID
+        $this->logToActivityLog($action, $logData, $causerId);
     }
 
     /**
      * 記錄到全域活動紀錄
      */
-    protected function logToActivityLog($action, $logData)
+    protected function logToActivityLog($action, $logData, $causerId)
     {
         \App\Models\ActivityLog::create([
-            'user_id' => $logData['user_id'],
             'log_name' => $this->getLogName(),
             'subject_type' => get_class($this),
             'subject_id' => $this->id,
-            'causer_type' => 'App\Models\User',
-            'causer_id' => $logData['user_id'],
+            'causer_type' => $causerId ? 'App\Models\User' : null,
+            'causer_id' => $causerId,
             'event' => $action,
             'description' => $logData['description'],
             'properties' => [

@@ -18,7 +18,7 @@ return new class extends Migration
         Schema::create('personal_access_tokens', function (Blueprint $table) {
             $table->id()->comment('令牌唯一識別碼');
             // 使用 morphs 建立多態關聯，可以關聯到任何可被授權的「擁有者」，通常是 User 模型
-            $table->morphs('tokenable')->comment('令牌擁有者的類型及 ID');
+            $table->morphs('tokenable');
             $table->text('name')->comment('令牌名稱，方便識別');
             $table->string('token', 64)->unique()->comment('令牌本身，是唯一的加密字串');
             $table->text('abilities')->nullable()->comment('令牌擁有的權限 (JSON 格式)');

@@ -47,14 +47,14 @@ class QuoteItem extends Model
         static::saved(function ($quoteItem) {
             // 更新報價單總金額
             if ($quoteItem->quote) {
-                $quoteItem->quote->calculateTotal();
+                $quoteItem->quote->recalculateTotal();
             }
         });
 
         static::deleted(function ($quoteItem) {
             // 更新報價單總金額
             if ($quoteItem->quote) {
-                $quoteItem->quote->calculateTotal();
+                $quoteItem->quote->recalculateTotal();
             }
         });
     }

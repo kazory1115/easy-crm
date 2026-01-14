@@ -1,5 +1,5 @@
 ﻿# PHP-FPM 映像檔（只保留 MVP 必要套件 + intl）
-FROM php:8.2-fpm
+FROM php:8.4-fpm
 
 # 可由 docker-compose 傳入的建置參數
 ARG TIMEZONE=Asia/Taipei

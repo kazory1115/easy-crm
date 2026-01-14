@@ -135,7 +135,7 @@ class DatabaseSeeder extends Seeder
 
                 // 重新載入後計算報價單總額
                 $quote->refresh();
-                $quote->calculateTotal();
+                $quote->recalculateTotal();
 
                 $this->command->info("✅ 報價單 #{$quote->quote_number} ({$quote->status})");
             }
