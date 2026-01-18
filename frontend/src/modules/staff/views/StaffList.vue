@@ -27,7 +27,7 @@
     </div>
 
     <!-- 搜尋與篩選 -->
-    <div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="app-card p-4 mb-6">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <input
           v-model="filters.search"
@@ -67,30 +67,28 @@
 
     <!-- 統計卡片 -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="app-card p-4">
         <div class="text-sm text-gray-500">總員工數</div>
         <div class="text-2xl font-bold text-gray-800">{{ stats.total }}</div>
       </div>
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="app-card p-4">
         <div class="text-sm text-gray-500">在職</div>
         <div class="text-2xl font-bold text-green-600">{{ stats.active }}</div>
       </div>
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="app-card p-4">
         <div class="text-sm text-gray-500">離職</div>
         <div class="text-2xl font-bold text-gray-400">{{ stats.inactive }}</div>
       </div>
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="app-card p-4">
         <div class="text-sm text-gray-500">停權</div>
         <div class="text-2xl font-bold text-red-600">{{ stats.suspended }}</div>
       </div>
     </div>
 
     <!-- 員工列表 -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-      <div v-if="loading" class="p-8 text-center text-gray-500">
-        載入中...
-      </div>
-      <div v-else-if="staffList.length === 0" class="p-8 text-center text-gray-500">
+    <div class="app-card overflow-hidden">
+      <LoadingPanel v-if="loading" variant="table" />
+      <div v-else-if="staffList.length === 0" class="empty-state">
         尚無員工資料
       </div>
       <table v-else class="min-w-full divide-y divide-gray-200">
@@ -164,6 +162,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import LoadingPanel from '@/components/LoadingPanel.vue'
 import { useStaff } from '../composables/useStaff'
 
 const {

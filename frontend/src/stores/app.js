@@ -21,7 +21,8 @@ export const useAppStore = defineStore('app', () => {
   /**
    * 載入狀態
    */
-  const loading = ref(false)
+  const loadingCount = ref(0)
+  const loading = computed(() => loadingCount.value > 0)
 
   /**
    * 全域通知列表
@@ -98,7 +99,23 @@ export const useAppStore = defineStore('app', () => {
    * @param {boolean} status - 載入狀態
    */
   function setLoading(status) {
-    loading.value = status
+    if (status) {
+      loadingCount.value += 1
+      return
+    }
+    loadingCount.value = Math.max(0, loadingCount.value - 1)
+  }
+
+  function startLoading() {
+    loadingCount.value += 1
+  }
+
+  function stopLoading() {
+    loadingCount.value = Math.max(0, loadingCount.value - 1)
+  }
+
+  function resetLoading() {
+    loadingCount.value = 0
   }
 
   /**
@@ -213,6 +230,7 @@ export const useAppStore = defineStore('app', () => {
     // State
     sidebarCollapsed,
     loading,
+    loadingCount,
     notifications,
     breadcrumbs,
     currentModule,
@@ -227,6 +245,9 @@ export const useAppStore = defineStore('app', () => {
     toggleSidebar,
     setSidebarCollapsed,
     setLoading,
+    startLoading,
+    stopLoading,
+    resetLoading,
     addNotification,
     showNotification,
     removeNotification,

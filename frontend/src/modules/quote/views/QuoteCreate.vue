@@ -53,16 +53,13 @@ table {
     </div>
 
     <!-- Loading -->
-    <div v-if="initialLoading" class="text-center py-12">
-      <i class="fa-solid fa-spinner fa-spin text-4xl text-blue-600"></i>
-      <p class="mt-4 text-gray-600">載入中...</p>
-    </div>
+    <LoadingPanel v-if="initialLoading" variant="skeleton" />
 
     <!-- Main Content -->
     <div v-else class="max-w-7x1">
       <!-- Quotation Card -->
       <div
-        class="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-x-auto"
+        class="app-card overflow-x-auto"
       >
         <!-- Card Header -->
         <div class="bg-gray-100 p-8 text-gray-800">
@@ -180,6 +177,7 @@ table {
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import LoadingPanel from '@/components/LoadingPanel.vue';
 import { getItems } from '@/utils/dataManager'; // 一般項目暫時保留使用 LocalStorage
 import { useQuote } from '../composables/useQuote';
 import { useTemplate } from '../composables/useQuote';

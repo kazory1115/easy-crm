@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div class="min-h-screen app-shell">
     <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-40">
+    <header class="app-header shadow-sm sticky top-0 z-40">
       <div class="flex items-center justify-between px-4 py-3">
         <!-- Logo & Toggle -->
         <div class="flex items-center space-x-4">
@@ -71,10 +71,10 @@
       <!-- Sidebar -->
       <aside
         :class="[
-          'bg-white shadow-lg transition-all duration-300 ease-in-out',
-          sidebarCollapsed ? 'w-20' : 'w-64'
+          'shadow-lg transition-all duration-300 ease-in-out',
+          isCompactSidebar ? 'w-20' : 'w-64'
         ]"
-        class="min-h-[calc(100vh-64px)] sticky top-16 z-30"
+        class="min-h-[calc(100vh-64px)] sticky top-16 z-30 app-sidebar"
       >
         <nav class="py-4">
           <ul class="space-y-1 px-2">
@@ -88,12 +88,12 @@
                   'bg-blue-50 text-blue-600': isActive(item.path),
                   'text-gray-700': !isActive(item.path)
                 }"
-                :title="sidebarCollapsed ? item.name : ''"
+                :title="isCompactSidebar ? item.name : ''"
               >
                 <font-awesome-icon :icon="item.icon" class="text-xl w-8 text-center" />
-                <span v-if="!sidebarCollapsed" class="font-medium">{{ item.name }}</span>
+                <span v-if="!isCompactSidebar" class="font-medium">{{ item.name }}</span>
                 <span
-                  v-if="item.badge && !sidebarCollapsed"
+                  v-if="item.badge && !isCompactSidebar"
                   class="ml-auto text-xs px-2 py-1 rounded-full"
                   :style="{ backgroundColor: item.color + '20', color: item.color }"
                 >
@@ -113,10 +113,10 @@
                 >
                   <div class="flex items-center space-x-3">
                     <font-awesome-icon :icon="item.icon" class="text-xl w-8 text-center" />
-                    <span v-if="!sidebarCollapsed" class="font-medium">{{ item.name }}</span>
+                    <span v-if="!isCompactSidebar" class="font-medium">{{ item.name }}</span>
                   </div>
                   <svg
-                    v-if="!sidebarCollapsed"
+                    v-if="!isCompactSidebar"
                     class="w-5 h-5 transition-transform"
                     :class="{ 'rotate-180': isSubMenuOpen(item.id) }"
                     fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -124,7 +124,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
                 </button>
-                <ul v-if="isSubMenuOpen(item.id) && !sidebarCollapsed" class="mt-1 space-y-1 pl-8 pr-2">
+                <ul v-if="isSubMenuOpen(item.id) && !isCompactSidebar" class="mt-1 space-y-1 pl-8 pr-2">
                   <template v-for="child in item.children" :key="child.id">
                     <li v-if="!child.permission || authStore.hasPermission(child.permission)">
                       <router-link
@@ -148,7 +148,7 @@
       </aside>
 
       <!-- Main Content -->
-      <main class="flex-1 p-6">
+      <main class="flex-1 p-4 md:p-6">
         <!-- Breadcrumbs -->
         <nav v-if="breadcrumbs.length > 0" class="mb-4">
           <ol class="flex items-center space-x-2 text-sm text-gray-600">
@@ -178,8 +178,10 @@
         </nav>
 
         <!-- Page Content -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <router-view />
+        <div class="app-card p-6">
+          <transition name="page" mode="out-in">
+            <router-view />
+          </transition>
         </div>
       </main>
     </div>
@@ -214,25 +216,11 @@
         </div>
       </transition-group>
     </div>
-
-    <!-- Loading Overlay -->
-    <div
-      v-if="loading"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    >
-      <div class="bg-white rounded-lg p-6 flex items-center space-x-4">
-        <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span class="text-gray-700 font-medium">載入中...</span>
-      </div>
-    </div>
-  </div>
+</div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
@@ -244,7 +232,8 @@ const route = useRoute()
 
 // State from stores
 const sidebarCollapsed = computed(() => appStore.sidebarCollapsed)
-const loading = computed(() => appStore.loading)
+const isNarrow = ref(false)
+const isCompactSidebar = computed(() => sidebarCollapsed.value || isNarrow.value)
 const notifications = computed(() => appStore.notifications)
 const breadcrumbs = computed(() => appStore.breadcrumbs)
 const menuItems = computed(() => appStore.sidebarMenuItems)
@@ -272,6 +261,19 @@ watch(route, (newRoute) => {
     openMenus.value.push(activeParent.id);
   }
 }, { immediate: true });
+
+function updateSidebarMode() {
+  isNarrow.value = window.innerWidth < 1200
+}
+
+onMounted(() => {
+  updateSidebarMode()
+  window.addEventListener('resize', updateSidebarMode)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateSidebarMode)
+})
 
 
 // Methods

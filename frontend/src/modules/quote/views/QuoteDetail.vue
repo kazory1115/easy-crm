@@ -45,13 +45,10 @@ table {
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-12">
-      <i class="fa-solid fa-spinner fa-spin text-4xl text-blue-600"></i>
-      <p class="mt-4 text-gray-600">載入中...</p>
-    </div>
+    <LoadingPanel v-if="loading" variant="skeleton" />
 
     <!-- Content -->
-    <div v-else-if="currentQuote" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8" id="quote-detail-print">
+    <div v-else-if="currentQuote" class="app-card p-8" id="quote-detail-print">
       <!-- 基本資訊區塊 -->
       <div class="text-center mb-8">
         <h2 class="text-4xl font-bold mb-2 tracking-tight text-gray-800">報價單</h2>
@@ -180,7 +177,7 @@ table {
     </div>
 
     <!-- Error State -->
-    <div v-else class="text-center py-12 bg-white rounded-2xl shadow-lg">
+    <div v-else class="app-card empty-state">
       <i class="fa-solid fa-exclamation-triangle text-6xl text-red-600 mb-4"></i>
       <h3 class="text-2xl font-bold text-gray-800 mb-2">載入失敗</h3>
       <p class="text-gray-600 mb-6">無法載入報價單資料，請稍後再試</p>
@@ -197,6 +194,7 @@ table {
 
 <script setup>
 import { computed, onMounted } from 'vue';
+import LoadingPanel from '@/components/LoadingPanel.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuote } from '../composables/useQuote';
 

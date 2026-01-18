@@ -23,9 +23,6 @@ http.interceptors.request.use(
       config.headers.Authorization = `Bearer ${authStore.token}`
     }
 
-    const appStore = useAppStore()
-    appStore.setLoading(true)
-
     console.log(`[HTTP] >>${config.method.toUpperCase()} ${config.url}`, config.data || '')
 
     return config
@@ -39,16 +36,12 @@ http.interceptors.request.use(
 // Response interceptor
 http.interceptors.response.use(
   (response) => {
-    const appStore = useAppStore()
-    appStore.setLoading(false)
 
     console.log(`[HTTP] <<${response.status} ${response.config.url}`, response.data)
 
     return response.data
   },
   (error) => {
-    const appStore = useAppStore()
-    appStore.setLoading(false)
 
     console.error('[HTTP] Response error:', error)
 

@@ -22,8 +22,9 @@ table {
     </div>
 
     <!-- 報價單列表 -->
-    <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 p-8">
-      <div v-if="quotes.length === 0" class="text-center text-gray-400 py-12">
+    <div class="app-card p-8">
+      <LoadingPanel v-if="loading" variant="skeleton" />
+      <div v-else-if="quotes.length === 0" class="empty-state">
         <i class="fa-solid fa-inbox text-6xl mb-4"></i>
         <p class="text-xl">尚無報價單紀錄</p>
         <p class="text-sm mt-2">請到「報價管理系統」建立報價單</p>
@@ -262,6 +263,7 @@ table {
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import LoadingPanel from '@/components/LoadingPanel.vue';
 import { useRouter } from 'vue-router';
 import { useQuote } from '../composables/useQuote';
 

@@ -28,7 +28,7 @@
     </div>
 
     <!-- 搜尋與篩選 -->
-    <div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="app-card p-4 mb-6">
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <input
           v-model="filters.search"
@@ -89,46 +89,80 @@
 
     <!-- 統計卡片 -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="app-card p-4">
         <div class="text-sm text-gray-500">總紀錄數</div>
-        <div class="text-2xl font-bold text-gray-800">{{ stats.total || 0 }}</div>
+        <div class="text-2xl font-bold text-gray-800">
+          {{ stats.total || 0 }}
+        </div>
       </div>
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="app-card p-4">
         <div class="text-sm text-gray-500">新增</div>
-        <div class="text-2xl font-bold text-green-600">{{ stats.byEvent?.created || 0 }}</div>
+        <div class="text-2xl font-bold text-green-600">
+          {{ stats.byEvent?.created || 0 }}
+        </div>
       </div>
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="app-card p-4">
         <div class="text-sm text-gray-500">更新</div>
-        <div class="text-2xl font-bold text-blue-600">{{ stats.byEvent?.updated || 0 }}</div>
+        <div class="text-2xl font-bold text-blue-600">
+          {{ stats.byEvent?.updated || 0 }}
+        </div>
       </div>
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="app-card p-4">
         <div class="text-sm text-gray-500">刪除</div>
-        <div class="text-2xl font-bold text-red-600">{{ stats.byEvent?.deleted || 0 }}</div>
+        <div class="text-2xl font-bold text-red-600">
+          {{ stats.byEvent?.deleted || 0 }}
+        </div>
       </div>
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="app-card p-4">
         <div class="text-sm text-gray-500">其他</div>
-        <div class="text-2xl font-bold text-gray-600">{{ otherEventsCount }}</div>
+        <div class="text-2xl font-bold text-gray-600">
+          {{ otherEventsCount }}
+        </div>
       </div>
     </div>
 
     <!-- 操作紀錄列表 -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-      <div v-if="loading" class="p-8 text-center text-gray-500">
-        載入中...
-      </div>
-      <div v-else-if="logs.length === 0" class="p-8 text-center text-gray-500">
-        尚無操作紀錄
-      </div>
+    <div class="app-card overflow-hidden">
+      <LoadingPanel v-if="loading" variant="table" />
+      <div v-else-if="logs.length === 0" class="empty-state">尚無操作紀錄</div>
       <table v-else class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">時間</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作者</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">模組</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">事件</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">描述</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP 位址</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              時間
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              操作者
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              模組
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              事件
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              描述
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              IP 位址
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              操作
+            </th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -137,7 +171,7 @@
               {{ formatDateTime(log.created_at) }}
             </td>
             <td class="px-4 py-4 text-sm text-gray-900">
-              {{ log.causer?.name || log.causer?.email || '系統' }}
+              {{ log.causer?.name || log.causer?.email || "系統" }}
             </td>
             <td class="px-4 py-4 text-sm text-gray-500">
               {{ getModuleText(log.log_name || log.module) }}
@@ -148,10 +182,10 @@
               </span>
             </td>
             <td class="px-4 py-4 text-sm text-gray-700">
-              {{ log.description || '-' }}
+              {{ log.description || "-" }}
             </td>
             <td class="px-4 py-4 text-sm text-gray-500">
-              {{ log.ip_address || '-' }}
+              {{ log.ip_address || "-" }}
             </td>
             <td class="px-4 py-4 text-sm">
               <button
@@ -166,10 +200,14 @@
       </table>
 
       <!-- 分頁 -->
-      <div v-if="pagination.last_page > 1" class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+      <div
+        v-if="pagination.last_page > 1"
+        class="px-4 py-3 border-t border-gray-200 bg-gray-50"
+      >
         <div class="flex items-center justify-between">
           <div class="text-sm text-gray-700">
-            第 {{ pagination.current_page }} 頁，共 {{ pagination.last_page }} 頁
+            第 {{ pagination.current_page }} 頁，共
+            {{ pagination.last_page }} 頁
           </div>
           <div class="flex gap-2">
             <button
@@ -192,14 +230,32 @@
     </div>
 
     <!-- 詳情 Modal -->
-    <div v-if="showDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+    <div
+      v-if="showDetailModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+      >
         <div class="p-6">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-gray-800">操作紀錄詳情</h2>
-            <button @click="closeDetailModal" class="text-gray-400 hover:text-gray-600">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <button
+              @click="closeDetailModal"
+              class="text-gray-400 hover:text-gray-600"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -208,48 +264,64 @@
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <div class="text-sm text-gray-500">操作時間</div>
-                <div class="text-sm font-medium text-gray-900">{{ formatDateTime(currentLog.created_at) }}</div>
+                <div class="text-sm font-medium text-gray-900">
+                  {{ formatDateTime(currentLog.created_at) }}
+                </div>
               </div>
               <div>
                 <div class="text-sm text-gray-500">操作者</div>
-                <div class="text-sm font-medium text-gray-900">{{ currentLog.causer?.name || '系統' }}</div>
+                <div class="text-sm font-medium text-gray-900">
+                  {{ currentLog.causer?.name || "系統" }}
+                </div>
               </div>
               <div>
                 <div class="text-sm text-gray-500">模組</div>
-                <div class="text-sm font-medium text-gray-900">{{ getModuleText(currentLog.log_name || currentLog.module) }}</div>
+                <div class="text-sm font-medium text-gray-900">
+                  {{ getModuleText(currentLog.log_name || currentLog.module) }}
+                </div>
               </div>
               <div>
                 <div class="text-sm text-gray-500">事件類型</div>
                 <div>
-                  <span :class="getEventClass(currentLog.event)">{{ getEventText(currentLog.event) }}</span>
+                  <span :class="getEventClass(currentLog.event)">{{
+                    getEventText(currentLog.event)
+                  }}</span>
                 </div>
               </div>
               <div>
                 <div class="text-sm text-gray-500">IP 位址</div>
-                <div class="text-sm font-medium text-gray-900">{{ currentLog.ip_address || '-' }}</div>
+                <div class="text-sm font-medium text-gray-900">
+                  {{ currentLog.ip_address || "-" }}
+                </div>
               </div>
               <div>
                 <div class="text-sm text-gray-500">User Agent</div>
-                <div class="text-sm font-medium text-gray-900 truncate" :title="currentLog.user_agent">
-                  {{ currentLog.user_agent || '-' }}
+                <div
+                  class="text-sm font-medium text-gray-900 truncate"
+                  :title="currentLog.user_agent"
+                >
+                  {{ currentLog.user_agent || "-" }}
                 </div>
               </div>
             </div>
 
             <div>
               <div class="text-sm text-gray-500 mb-1">描述</div>
-              <div class="text-sm text-gray-900">{{ currentLog.description || '-' }}</div>
+              <div class="text-sm text-gray-900">
+                {{ currentLog.description || "-" }}
+              </div>
             </div>
 
             <div v-if="currentLog.properties">
               <div class="text-sm text-gray-500 mb-1">詳細資料</div>
-              <pre class="text-xs bg-gray-50 p-3 rounded border overflow-x-auto">{{ JSON.stringify(currentLog.properties, null, 2) }}</pre>
+              <pre
+                class="text-xs bg-gray-50 p-3 rounded border overflow-x-auto"
+                >{{ JSON.stringify(currentLog.properties, null, 2) }}</pre
+              >
             </div>
           </div>
 
-          <div v-else class="text-center text-gray-500 py-8">
-            載入中...
-          </div>
+          <div v-else class="text-center text-gray-500 py-8">載入中...</div>
         </div>
       </div>
     </div>
@@ -257,8 +329,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useActivityLog } from '../composables/useActivityLog'
+import { ref, computed, onMounted } from "vue";
+import LoadingPanel from "@/components/LoadingPanel.vue";
+import { useActivityLog } from "../composables/useActivityLog";
 
 const {
   logs,
@@ -273,115 +346,115 @@ const {
   getEventText,
   getEventClass,
   getModuleText,
-  formatDateTime
-} = useActivityLog()
+  formatDateTime,
+} = useActivityLog();
 
 // 檢視模式：all (全部) 或 my (我的)
-const viewMode = ref('all')
+const viewMode = ref("all");
 
 // 篩選條件
 const filters = ref({
-  search: '',
-  event: '',
-  module: '',
-  start_date: '',
-  end_date: ''
-})
+  search: "",
+  event: "",
+  module: "",
+  start_date: "",
+  end_date: "",
+});
 
 // 詳情 Modal
-const showDetailModal = ref(false)
+const showDetailModal = ref(false);
 
 // 計算其他事件數量
 const otherEventsCount = computed(() => {
-  const total = stats.value.total || 0
-  const created = stats.value.byEvent?.created || 0
-  const updated = stats.value.byEvent?.updated || 0
-  const deleted = stats.value.byEvent?.deleted || 0
-  return Math.max(0, total - created - updated - deleted)
-})
+  const total = stats.value.total || 0;
+  const created = stats.value.byEvent?.created || 0;
+  const updated = stats.value.byEvent?.updated || 0;
+  const deleted = stats.value.byEvent?.deleted || 0;
+  return Math.max(0, total - created - updated - deleted);
+});
 
 // 載入操作紀錄
 const loadActivityLogs = async (page = 1) => {
   const params = {
     ...filters.value,
     page,
-    per_page: 20
-  }
+    per_page: 20,
+  };
 
-  if (viewMode.value === 'my') {
-    await fetchMyActivityLogs(params)
+  if (viewMode.value === "my") {
+    await fetchMyActivityLogs(params);
   } else {
-    await fetchActivityLogs(params)
+    await fetchActivityLogs(params);
   }
-}
+};
 
 // 載入統計資料
 const loadStats = async () => {
   await fetchActivityLogStats({
-    group_by: 'event',
+    group_by: "event",
     start_date: filters.value.start_date,
-    end_date: filters.value.end_date
-  })
-}
+    end_date: filters.value.end_date,
+  });
+};
 
 // 防抖搜尋
-let searchTimeout = null
+let searchTimeout = null;
 const debouncedSearch = () => {
-  clearTimeout(searchTimeout)
+  clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    loadActivityLogs()
-  }, 300)
-}
+    loadActivityLogs();
+  }, 300);
+};
 
 // 重置篩選
 const resetFilters = () => {
   filters.value = {
-    search: '',
-    event: '',
-    module: '',
-    start_date: '',
-    end_date: ''
-  }
-  loadActivityLogs()
-  loadStats()
-}
+    search: "",
+    event: "",
+    module: "",
+    start_date: "",
+    end_date: "",
+  };
+  loadActivityLogs();
+  loadStats();
+};
 
 // 重新整理
 const handleRefresh = () => {
-  loadActivityLogs()
-  loadStats()
-}
+  loadActivityLogs();
+  loadStats();
+};
 
 // 切換檢視模式
 const switchToMyLogs = () => {
-  viewMode.value = 'my'
-  loadActivityLogs()
-}
+  viewMode.value = "my";
+  loadActivityLogs();
+};
 
 const switchToAllLogs = () => {
-  viewMode.value = 'all'
-  loadActivityLogs()
-}
+  viewMode.value = "all";
+  loadActivityLogs();
+};
 
 // 分頁
 const goToPage = (page) => {
   if (page >= 1 && page <= pagination.value.last_page) {
-    loadActivityLogs(page)
+    loadActivityLogs(page);
   }
-}
+};
 
 // 查看詳情
 const handleViewDetail = async (id) => {
-  await fetchActivityLog(id)
-  showDetailModal.value = true
-}
+  await fetchActivityLog(id);
+  showDetailModal.value = true;
+};
 
 const closeDetailModal = () => {
-  showDetailModal.value = false
-}
+  showDetailModal.value = false;
+};
 
 onMounted(async () => {
-  await loadActivityLogs()
-  await loadStats()
-})
+  await loadActivityLogs();
+  await loadStats();
+});
 </script>

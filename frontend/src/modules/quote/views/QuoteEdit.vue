@@ -40,15 +40,12 @@ table {
     </div>
 
     <!-- Loading -->
-    <div v-if="loading && !currentQuote" class="text-center py-12">
-      <i class="fa-solid fa-spinner fa-spin text-4xl text-blue-600"></i>
-      <p class="mt-4 text-gray-600">載入中...</p>
-    </div>
+    <LoadingPanel v-if="loading && !currentQuote" variant="skeleton" />
 
     <!-- Main Content -->
     <div v-else-if="currentQuote" class="max-w-7x1">
       <!-- Quotation Card -->
-      <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-x-auto">
+      <div class="app-card overflow-x-auto">
         <!-- Card Header -->
         <div class="bg-gray-100 p-8 text-gray-800">
           <div class="text-center mb-8">
@@ -126,7 +123,7 @@ table {
     </div>
 
     <!-- Error State -->
-    <div v-else class="text-center py-12">
+    <div v-else class="empty-state">
       <i class="fa-solid fa-exclamation-triangle text-4xl text-red-600"></i>
       <p class="mt-4 text-gray-600">載入報價單失敗</p>
       <button @click="goBack" class="mt-4 px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
@@ -146,6 +143,7 @@ table {
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import LoadingPanel from '@/components/LoadingPanel.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getItems } from '@/utils/dataManager'; // 一般項目暫時保留使用 LocalStorage
 import { useQuote } from '../composables/useQuote';
