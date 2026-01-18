@@ -667,18 +667,18 @@ async function saveTemplate() {
 
     if (isCreatingNew.value) {
       await createTemplate(templateData);
-      showSuccessMessage("??????");
+      showSuccessMessage("模板已新增！");
     } else {
       await updateTemplate(activeTemplate.value.id, templateData);
-      showSuccessMessage("??????");
+      showSuccessMessage("模板已更新！");
     }
 
     await loadTemplates();
     activeTemplate.value = null;
     isCreatingNew.value = false;
   } catch (err) {
-    error.value = "???????" + err.message;
-    console.error("???????", err);
+    error.value = "儲存模板失敗：" + err.message;
+    console.error("儲存模板失敗：", err);
   } finally {
     loadingCount.value--;
   }
