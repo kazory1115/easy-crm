@@ -138,12 +138,22 @@ table {
       >
         <div class="flex justify-between items-start mb-6">
           <h3 class="text-2xl font-bold text-gray-800">報價單詳情</h3>
-          <button
-            @click="closeDetailModal"
-            class="text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            <i class="fa-solid fa-xmark"></i>
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              v-if="selectedQuote"
+              @click="downloadSelectedQuote"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+              title="下載 Word"
+            >
+              <i class="fa-solid fa-download mr-2"></i>下載 Word
+            </button>
+            <button
+              @click="closeDetailModal"
+              class="text-gray-400 hover:text-gray-600 text-2xl"
+            >
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
         </div>
 
         <div v-if="selectedQuote">
@@ -304,6 +314,102 @@ function editQuote(id) {
 function closeDetailModal() {
   showDetailModal.value = false;
   selectedQuote.value = null;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function generateQuoteHtml(quote) {
+  const customerName = quote.customer_name || quote.customerName || '';
+  const quoteNumber = quote.quote_number || quote.quotationNumber || '';
+  const quoteDate = quote.quote_date || quote.date || '';
+  const contactPhone = quote.contact_phone || quote.contactPhone || '';
+  const notes = quote.notes || '';
+  const items = Array.isArray(quote.items) ? quote.items : [];
+
+  const total = items.reduce((sum, item) => {
+    const quantity = Number(item.quantity) || 0;
+    const price = Number(item.price) || 0;
+    return sum + quantity * price;
+  }, 0);
+
+  const itemsHtml = items.map((item, index) => {
+    const quantity = Number(item.quantity) || 0;
+    const price = Number(item.price) || 0;
+    const subtotal = quantity * price;
+    return `
+      <tr>
+        <td class="alignCenter">${index + 1}</td>
+        <td>${item.name || ''}</td>
+        <td style="text-align: right;">${quantity}</td>
+        <td class="alignCenter">${escapeHtml(item.unit || '')}</td>
+        <td style="text-align: right;">${price.toLocaleString()}</td>
+        <td style="text-align: right;">${subtotal.toLocaleString()}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: sans-serif; }
+        table { border-collapse: collapse; width: 100%; font-size: 12px; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
+        th { background-color: #f2f2f2; text-align: center; }
+        .alignCenter { text-align: center; }
+        .header { text-align: center; margin-bottom: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h2>報價單</h2>
+        <p><strong>客戶名稱:</strong> ${escapeHtml(customerName)}</p>
+        <p><strong>報價單號:</strong> ${escapeHtml(quoteNumber)} &nbsp;&nbsp; <strong>日期:</strong> ${escapeHtml(quoteDate)}</p>
+        <p><strong>聯絡電話:</strong> ${escapeHtml(contactPhone)}</p>
+      </div>
+      <table>
+        <tr>
+          <th style="width: 5%">項次</th>
+          <th style="width: 40%">項目名稱</th>
+          <th style="width: 10%">數量</th>
+          <th style="width: 10%">單位</th>
+          <th style="width: 15%">單價</th>
+          <th style="width: 20%">小計</th>
+        </tr>
+        ${itemsHtml}
+      </table>
+      <p style="text-align: right; margin-top: 10px;"><strong>總金額:</strong> ${total.toLocaleString()} 元</p>
+      <div style="margin-top: 20px;">
+        <strong>備註:</strong>
+        <p style="white-space: pre-wrap;">${escapeHtml(notes)}</p>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+function downloadSelectedQuote() {
+  if (!selectedQuote.value) return;
+
+  const content = generateQuoteHtml(selectedQuote.value);
+  const blob = new Blob(['\ufeff' + content], { type: 'application/msword' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+
+  const customer = (selectedQuote.value.customer_name || selectedQuote.value.customerName || '報價單')
+    .replace(/[\\/:*?"<>|]/g, '_');
+  link.download = `${customer}-報價單.doc`;
+  link.click();
+
+  URL.revokeObjectURL(link.href);
 }
 
 // 刪除報價單
