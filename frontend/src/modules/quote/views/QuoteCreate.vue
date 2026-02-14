@@ -318,9 +318,10 @@ function generateHtmlContent() {
   const itemsHtml = items.value.map((item, index) => {
     let specHtml = '';
     if (item.type === 'template' && item.fields && item.fields.length > 0) {
-      specHtml = '<br/><small style="font-size: 0.8em; color: #555;">' +
-                   item.fields.map(f => `${f.label}: ${f.value}`).join(', ') +
-                   '</small>';
+      const fieldLines = item.fields
+        .map(f => `<div>${f.label}: ${f.value ?? ''}</div>`)
+        .join('');
+      specHtml = `<br/><small style="display: block; font-size: 0.8em; color: #555;">${fieldLines}</small>`;
     }
     return `
       <tr>
