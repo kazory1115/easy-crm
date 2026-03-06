@@ -122,6 +122,14 @@ class Order extends Model
     }
 
     /**
+     * 關聯：訂單變更紀錄
+     */
+    public function logs()
+    {
+        return $this->hasMany(OrderLog::class)->latest();
+    }
+
+    /**
      * 重新計算所有金額（小計、稅金、總計）
      */
     public function recalculateTotal()

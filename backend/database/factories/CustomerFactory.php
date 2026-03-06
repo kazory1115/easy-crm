@@ -21,6 +21,7 @@ class CustomerFactory extends Factory
     {
         $companyTypes = ['股份有限公司', '有限公司', '工作室', '商行', '企業社'];
         $industries = ['科技業', '製造業', '服務業', '零售業', '餐飲業', '建築業', '金融業'];
+        $internetFaker = fake('en_US');
 
         $isCompany = fake()->boolean(70); // 70% 機率是公司
 
@@ -35,12 +36,12 @@ class CustomerFactory extends Factory
         return [
             'name' => $name,
             'contact_person' => fake('zh_TW')->name(),
-            'email' => fake()->unique()->companyEmail(),
+            'email' => $internetFaker->unique()->companyEmail(),
             'phone' => fake()->boolean(70) ? '02-' . fake()->numerify('########') : '09' . fake()->numerify('########'),
             'mobile' => '09' . fake()->numerify('########'),
             'tax_id' => $taxId,
             'address' => fake('zh_TW')->address(),
-            'website' => fake()->boolean(40) ? fake()->url() : null,
+            'website' => fake()->boolean(40) ? $internetFaker->url() : null,
             'industry' => fake()->randomElement($industries),
             'status' => fake()->randomElement(['active', 'inactive']),
             'notes' => fake()->boolean(30) ? fake('zh_TW')->realText(100) : null,

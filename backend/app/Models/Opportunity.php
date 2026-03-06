@@ -25,5 +25,41 @@ class Opportunity extends Model
 
     protected $casts = [
         'expected_close_date' => 'date',
+        'amount' => 'decimal:2',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
+
+    /**
+     * 關聯：客戶
+     */
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * 關聯：建立者
+     */
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * 關聯：更新者
+     */
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * 關聯：商機日誌
+     */
+    public function logs()
+    {
+        return $this->hasMany(OpportunityLog::class)->latest();
+    }
 }

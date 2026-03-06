@@ -38,7 +38,7 @@ class UserFactory extends Factory
 
         return [
             'name' => fake('zh_TW')->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'email' => fake('en_US')->unique()->safeEmail(),
             'phone' => '09' . fake()->numerify('########'),
             'department' => $department,
             'position' => $position,

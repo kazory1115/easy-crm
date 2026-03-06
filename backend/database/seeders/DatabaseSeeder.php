@@ -28,14 +28,14 @@ class DatabaseSeeder extends Seeder
             // 1. 建立使用者與員工
             $this->command->info('建立使用者..');
 
-            // 管理員
-            $admin = User::factory()->admin()->create();
-            $admin->assignRole('admin');
+            $this->call(UserSeeder::class);
+
+            $admin = User::where('email', 'admin@example.com')->firstOrFail();
+            $admin->syncRoles(['admin']);
             $this->command->info("✅ 管理員: {$admin->email} (密碼: password)");
 
-            // 測試使用者
-            $testUser = User::factory()->testUser()->create();
-            $testUser->assignRole('staff');
+            $testUser = User::where('email', 'test@example.com')->firstOrFail();
+            $testUser->syncRoles(['staff']);
             $this->command->info("✅ 測試使用者: {$testUser->email} (密碼: password)");
 
             // 其他員工

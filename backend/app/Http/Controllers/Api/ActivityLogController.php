@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class ActivityLogController extends Controller
@@ -13,11 +14,12 @@ class ActivityLogController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ActivityLog::with(['user']);
+        $query = ActivityLog::with(['causer']);
 
         // 依用戶篩選
         if ($request->has('user_id')) {
-            $query->where('user_id', $request->user_id);
+            $query->where('causer_type', User::class)
+                ->where('causer_id', $request->user_id);
         }
 
         // 依事件類型篩選
@@ -61,7 +63,7 @@ class ActivityLogController extends Controller
      */
     public function show($id)
     {
-        $log = ActivityLog::with(['user', 'subject', 'causer'])->findOrFail($id);
+        $log = ActivityLog::with(['subject', 'causer'])->findOrFail($id);
         return response()->json(['data' => $log]);
     }
 
@@ -71,7 +73,8 @@ class ActivityLogController extends Controller
     public function myLogs(Request $request)
     {
         $query = ActivityLog::with(['subject'])
-            ->where('user_id', auth()->id());
+            ->where('causer_type', User::class)
+            ->where('causer_id', auth()->id());
 
         // 日期範圍篩選
         if ($request->has('start_date')) {
@@ -95,7 +98,7 @@ class ActivityLogController extends Controller
     /**
      * 取得特定模組的操作紀錄
      */
-    public function moduleLogss(Request $request, $module)
+    public function moduleLogs(Request $request, $module)
     {
         // 模組對應的 Model 類別
         $moduleMap = [
@@ -112,7 +115,7 @@ class ActivityLogController extends Controller
             ], 400);
         }
 
-        $query = ActivityLog::with(['user'])
+        $query = ActivityLog::with(['causer'])
             ->forSubject($moduleMap[$module]);
 
         // 如果有指定 ID，只取得該筆資料的紀錄
@@ -152,10 +155,12 @@ class ActivityLogController extends Controller
             'by_module' => (clone $query)->groupBy('log_name')
                 ->selectRaw('log_name, count(*) as count')
                 ->pluck('count', 'log_name'),
-            'recent_users' => (clone $query)->with('user')
-                ->select('user_id')
-                ->groupBy('user_id')
-                ->selectRaw('user_id, count(*) as count')
+            'recent_users' => (clone $query)
+                ->where('causer_type', User::class)
+                ->with('causer')
+                ->select('causer_id')
+                ->groupBy('causer_id')
+                ->selectRaw('causer_id, count(*) as count')
                 ->orderBy('count', 'desc')
                 ->take(10)
                 ->get(),

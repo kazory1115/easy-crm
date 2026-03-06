@@ -22,6 +22,32 @@ class StockAdjustment extends Model
     ];
 
     protected $casts = [
+        'before_qty' => 'integer',
+        'after_qty' => 'integer',
         'created_at' => 'datetime',
     ];
+
+    protected $appends = [
+        'difference',
+    ];
+
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
+    public function item()
+    {
+        return $this->belongsTo(Item::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function getDifferenceAttribute(): int
+    {
+        return (int)$this->after_qty - (int)$this->before_qty;
+    }
 }

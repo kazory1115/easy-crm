@@ -36,10 +36,15 @@
 
         <div>
           <button type="submit"
+                  :disabled="loading"
                   class="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            登入
+            {{ loading ? '登入中...' : '登入' }}
           </button>
         </div>
+
+        <p v-if="errorMessage" class="text-sm text-red-600 text-center">
+          {{ errorMessage }}
+        </p>
       </form>
     </div>
   </div>
@@ -52,18 +57,21 @@ import { useRouter } from 'vue-router';
 
 const email = ref('test@example.com');
 const password = ref('password');
+const loading = ref(false);
+const errorMessage = ref('');
 const authStore = useAuthStore();
 const router = useRouter();
 
 const handleLogin = async () => {
   try {
-    // This will be a mocked call for now
+    loading.value = true;
+    errorMessage.value = '';
     await authStore.login({ email: email.value, password: password.value });
-    // Redirect to a protected page, e.g., home or dashboard
     router.push('/');
   } catch (error) {
-    console.error('Login failed:', error);
-    // Here you could show an error message to the user
+    errorMessage.value = error.message || '登入失敗，請檢查帳號密碼。';
+  } finally {
+    loading.value = false;
   }
 };
 </script>

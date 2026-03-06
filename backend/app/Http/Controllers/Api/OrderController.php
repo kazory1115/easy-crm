@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\OrderService; // Added OrderService
-use App\Models\Order; // Added Order model
+use App\Models\Order;
+use App\Services\OrderService;
+use DomainException;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class OrderController extends Controller
 {
@@ -66,13 +69,20 @@ class OrderController extends Controller
             'project_name' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'tax_rate' => 'nullable|numeric|min:0|max:1',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'status' => ['nullable', Rule::in(['pending', 'confirmed', 'processing', 'shipped', 'completed', 'cancelled'])],
+            'payment_status' => ['nullable', Rule::in(['unpaid', 'partially_paid', 'paid', 'refunded'])],
             'items' => 'required|array|min:1',
+            'items.*.sort_order' => 'nullable|integer|min:0',
             'items.*.item_id' => 'nullable|exists:items,id',
+            'items.*.type' => 'nullable|in:input,drop,template',
             'items.*.name' => 'required|string|max:255',
             'items.*.description' => 'nullable|string',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit' => 'nullable|string|max:50',
             'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.fields' => 'nullable|array',
+            'items.*.notes' => 'nullable|string',
         ]);
 
         try {
@@ -88,8 +98,12 @@ class OrderController extends Controller
                 'message' => '訂單建立成功',
                 'data' => $order,
             ], 201);
-        } catch (\Exception $e) {
-            return response()->json(['message' => '訂單建立失敗', 'error' => $e->getMessage()], 500);
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['message' => '訂單建立失敗', 'error' => $e->getMessage()], 422);
+        } catch (DomainException $e) {
+            return response()->json(['message' => '訂單建立失敗', 'error' => $e->getMessage()], 409);
+        } catch (Throwable $e) {
+            return response()->json(['message' => '訂單建立失敗', 'error' => '系統發生未預期錯誤'], 500);
         }
     }
 
@@ -121,15 +135,20 @@ class OrderController extends Controller
             'project_name' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'tax_rate' => 'nullable|numeric|min:0|max:1',
-            'status' => ['sometimes', 'required', Rule::in(['pending', 'confirmed', 'shipped', 'completed', 'cancelled'])],
-            'payment_status' => ['sometimes', 'required', Rule::in(['unpaid', 'partially_paid', 'paid'])],
+            'discount_amount' => 'nullable|numeric|min:0',
+            'status' => ['sometimes', 'required', Rule::in(['pending', 'confirmed', 'processing', 'shipped', 'completed', 'cancelled'])],
+            'payment_status' => ['sometimes', 'required', Rule::in(['unpaid', 'partially_paid', 'paid', 'refunded'])],
             'items' => 'sometimes|required|array|min:1',
+            'items.*.sort_order' => 'nullable|integer|min:0',
             'items.*.item_id' => 'nullable|exists:items,id',
+            'items.*.type' => 'nullable|in:input,drop,template',
             'items.*.name' => 'required_with:items|string|max:255',
             'items.*.description' => 'nullable|string',
             'items.*.quantity' => 'required_with:items|integer|min:1',
             'items.*.unit' => 'nullable|string|max:50',
             'items.*.unit_price' => 'required_with:items|numeric|min:0',
+            'items.*.fields' => 'nullable|array',
+            'items.*.notes' => 'nullable|string',
         ]);
 
         try {
@@ -146,8 +165,12 @@ class OrderController extends Controller
                 'message' => '訂單更新成功',
                 'data' => $order,
             ]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => '訂單更新失敗', 'error' => $e->getMessage()], 500);
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['message' => '訂單更新失敗', 'error' => $e->getMessage()], 422);
+        } catch (DomainException $e) {
+            return response()->json(['message' => '訂單更新失敗', 'error' => $e->getMessage()], 409);
+        } catch (Throwable $e) {
+            return response()->json(['message' => '訂單更新失敗', 'error' => '系統發生未預期錯誤'], 500);
         }
     }
 

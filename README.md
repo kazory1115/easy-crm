@@ -1,4 +1,4 @@
-﻿# Easy CRM (MVP)
+# Easy CRM (MVP)
 
 Easy CRM 是一套以 Vue 3 + Laravel + MySQL 組成的輕量 CRM MVP，前端採模組化設計，後端提供 REST API 與活動紀錄。
 
@@ -49,6 +49,10 @@ docker compose exec php php artisan db:seed
 - 開發模式：`cd frontend && npm install && npm run dev`
 - 生產模式：`npm run build`，Nginx 會讀取 `frontend/dist`
 
+### 4.1) 預設登入帳號（Seeder）
+- 管理員：`admin@example.com / password`
+- 測試帳號：`test@example.com / password`
+
 ### 5) 入口
 - API: http://localhost:8180/api/ping
 - 前端開發：http://localhost:5173
@@ -78,5 +82,8 @@ docker compose exec php php artisan db:seed
 - `DB_EXTERNAL_PORT`
 
 ## 開發備註
-- 報價模組可切換 LocalStorage：`frontend/src/modules/quote/composables/useQuote.js` 的 `dataSource`
-- 員工模組預設走 API：`frontend/src/modules/staff/composables/useStaff.js` 的 `USE_API = true`
+- 報價模組已統一走 API：`frontend/src/modules/quote/composables/useQuote.js`
+- 員工模組為 API-only：`frontend/src/modules/staff/composables/useStaff.js`
+- 報價匯出現況：
+  - 前端已支援 Word 匯出 / 列印
+  - 後端 PDF/Excel 匯出與寄信（`QuoteController@send`）仍為待完成項目

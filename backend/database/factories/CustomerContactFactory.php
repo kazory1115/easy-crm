@@ -22,7 +22,7 @@ class CustomerContactFactory extends Factory
             'title' => fake()->jobTitle(),
             'phone' => fake()->phoneNumber(),
             'mobile' => fake()->phoneNumber(),
-            'email' => fake()->safeEmail(),
+            'email' => fake('en_US')->safeEmail(),
             'is_primary' => fake()->boolean(20),
             'notes' => fake()->boolean(30) ? fake()->sentence() : null,
             'created_by' => User::factory(),

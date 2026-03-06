@@ -215,11 +215,21 @@ export const useAppStore = defineStore('app', () => {
   }
 
   /**
-   * 顯示通知（addNotification 的別名）
-   * @param {Object} notification - 通知物件
+   * 顯示通知（兼容兩種呼叫方式）
+   * 1) showNotification({ type, message, duration })
+   * 2) showNotification(message, type, duration)
    */
-  function showNotification(notification) {
-    addNotification(notification)
+  function showNotification(notificationOrMessage, type = 'info', duration = 3000) {
+    if (typeof notificationOrMessage === 'string') {
+      addNotification({
+        type,
+        message: notificationOrMessage,
+        duration
+      })
+      return
+    }
+
+    addNotification(notificationOrMessage)
   }
 
   // ==========================================

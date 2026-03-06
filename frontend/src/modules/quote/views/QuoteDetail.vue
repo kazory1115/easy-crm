@@ -18,6 +18,15 @@ table {
         </div>
         <div class="flex gap-2">
           <button
+            v-if="currentQuote && canConvertToOrder"
+            @click="handleConvertToOrder"
+            :disabled="isConverting"
+            class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <i class="fa-solid fa-file-invoice mr-2"></i>
+            {{ isConverting ? '轉單中...' : '轉為訂單' }}
+          </button>
+          <button
             v-if="currentQuote"
             @click="printQuote"
             class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
@@ -65,11 +74,11 @@ table {
           <div class="space-y-3">
             <div class="flex">
               <span class="text-gray-600 w-24">客戶名稱:</span>
-              <span class="font-semibold text-gray-800">{{ currentQuote.customerName }}</span>
+              <span class="font-semibold text-gray-800">{{ currentQuote.customer_name || currentQuote.customerName }}</span>
             </div>
-            <div v-if="currentQuote.contactPhone" class="flex">
+            <div v-if="currentQuote.contact_phone || currentQuote.contactPhone" class="flex">
               <span class="text-gray-600 w-24">聯絡電話:</span>
-              <span class="font-semibold text-gray-800">{{ currentQuote.contactPhone }}</span>
+              <span class="font-semibold text-gray-800">{{ currentQuote.contact_phone || currentQuote.contactPhone }}</span>
             </div>
           </div>
         </div>
@@ -80,13 +89,13 @@ table {
             報價資訊
           </h4>
           <div class="space-y-3">
-            <div v-if="currentQuote.quotationNumber" class="flex">
+            <div v-if="currentQuote.quote_number || currentQuote.quotationNumber" class="flex">
               <span class="text-gray-600 w-24">報價單號:</span>
-              <span class="font-semibold text-gray-800">{{ currentQuote.quotationNumber }}</span>
+              <span class="font-semibold text-gray-800">{{ currentQuote.quote_number || currentQuote.quotationNumber }}</span>
             </div>
             <div class="flex">
               <span class="text-gray-600 w-24">報價日期:</span>
-              <span class="font-semibold text-gray-800">{{ formatDate(currentQuote.date) }}</span>
+              <span class="font-semibold text-gray-800">{{ formatDate(currentQuote.quote_date || currentQuote.date) }}</span>
             </div>
             <div v-if="currentQuote.status" class="flex">
               <span class="text-gray-600 w-24">狀態:</span>
@@ -118,7 +127,7 @@ table {
             </thead>
             <tbody class="divide-y divide-gray-100 bg-white">
               <tr
-                v-for="(item, index) in currentQuote.items"
+                v-for="(item, index) in quoteItems"
                 :key="index"
                 class="hover:bg-gray-50 transition-colors"
               >
@@ -151,7 +160,7 @@ table {
         <div class="flex justify-between items-center">
           <span class="text-lg font-semibold text-gray-800">總金額：</span>
           <span class="text-3xl font-bold text-blue-600">
-            {{ currentQuote.total.toLocaleString() }} 元
+            {{ Number(currentQuote.total || 0).toLocaleString() }} 元
           </span>
         </div>
       </div>
@@ -168,9 +177,9 @@ table {
       <!-- 時間資訊 -->
       <div class="text-sm text-gray-500 border-t pt-4">
         <div class="flex justify-between">
-          <span>建立時間：{{ formatDateTime(currentQuote.createdAt) }}</span>
-          <span v-if="currentQuote.updatedAt !== currentQuote.createdAt">
-            更新時間：{{ formatDateTime(currentQuote.updatedAt) }}
+          <span>建立時間：{{ formatDateTime(currentQuote.created_at || currentQuote.createdAt) }}</span>
+          <span v-if="(currentQuote.updated_at || currentQuote.updatedAt) !== (currentQuote.created_at || currentQuote.createdAt)">
+            更新時間：{{ formatDateTime(currentQuote.updated_at || currentQuote.updatedAt) }}
           </span>
         </div>
       </div>
@@ -197,13 +206,18 @@ import { computed, onMounted } from 'vue';
 import LoadingPanel from '@/components/LoadingPanel.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuote } from '../composables/useQuote';
+import { useOrder } from '@/modules/order/composables/useOrder';
 
 const route = useRoute();
 const router = useRouter();
 
 const { currentQuote, loading, error, fetchQuote } = useQuote();
+const { convertQuoteToOrder, submitting: orderSubmitting } = useOrder();
 
 const quoteId = computed(() => route.params.id);
+const quoteItems = computed(() => currentQuote.value?.items || []);
+const canConvertToOrder = computed(() => currentQuote.value?.status === 'approved');
+const isConverting = computed(() => orderSubmitting.value);
 
 // 載入報價單
 onMounted(async () => {
@@ -272,6 +286,24 @@ function getStatusClass(status) {
 // 編輯報價單
 function editQuote() {
   router.push(`/quote/edit/${quoteId.value}`);
+}
+
+async function handleConvertToOrder() {
+  if (!canConvertToOrder.value || !currentQuote.value?.id) {
+    return;
+  }
+
+  const confirmed = window.confirm('確定要將此報價單轉為訂單嗎？');
+  if (!confirmed) {
+    return;
+  }
+
+  const order = await convertQuoteToOrder(Number(currentQuote.value.id));
+  if (!order?.id) {
+    return;
+  }
+
+  router.push(`/order/detail/${order.id}`);
 }
 
 // 返回

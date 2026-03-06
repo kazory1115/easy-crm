@@ -145,14 +145,14 @@ table {
 import { ref, computed, onMounted } from 'vue';
 import LoadingPanel from '@/components/LoadingPanel.vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getItems } from '@/utils/dataManager'; // 一般項目暫時保留使用 LocalStorage
-import { useQuote } from '../composables/useQuote';
+import { useItem, useQuote } from '../composables/useQuote';
 import { useTemplate } from '../composables/useQuote';
 import QuoteItemsTable from '../components/QuoteItemsTable.vue';
 
 const route = useRoute();
 const router = useRouter();
 
+const { items: availableItems, fetchItems } = useItem();
 const { currentQuote, loading, fetchQuote, updateQuote } = useQuote();
 const { templates, fetchTemplates } = useTemplate();
 
@@ -168,7 +168,7 @@ const formData = ref({
   items: [],
 });
 
-const itemDatas = ref([]);
+const itemDatas = computed(() => availableItems.value);
 const templateDatas = computed(() => templates.value);
 
 // 成功提示
@@ -177,8 +177,7 @@ const successMessage = ref('');
 
 // 載入資料
 onMounted(async () => {
-  // 載入一般項目
-  itemDatas.value = getItems();
+  await fetchItems();
 
   // 載入範本
   try {

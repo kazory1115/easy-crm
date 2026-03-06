@@ -21,6 +21,7 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('auth_token') || null)
   const permissions = ref(JSON.parse(localStorage.getItem('auth_permissions')) || [])
   const roles = ref(JSON.parse(localStorage.getItem('auth_roles')) || [])
+  const authChecked = ref(false)
 
   // ==========================================
   // Getters
@@ -65,6 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
       setUser(userData)
       setPermissions(Array.isArray(permissionList) ? permissionList : [])
       setRoles(Array.isArray(roleList) ? roleList : [])
+      authChecked.value = true
 
       console.log('[Auth] Login successful')
       return Promise.resolve()
@@ -135,6 +137,7 @@ export const useAuthStore = defineStore('auth', () => {
     setUser(null)
     setPermissions([])
     setRoles([])
+    authChecked.value = true
   }
 
   function hasPermission(permission, requireAll = false) {
@@ -156,6 +159,48 @@ export const useAuthStore = defineStore('auth', () => {
     return rolesToCheck.some(r => roles.value.includes(r))
   }
 
+  async function syncCurrentUser() {
+    if (!token.value) {
+      clearAuth()
+      return null
+    }
+
+    try {
+      const response = await get('/auth/me')
+      const {
+        user: userData,
+        roles: roleList = [],
+        permissions: permissionList = []
+      } = response || {}
+
+      setUser(userData || null)
+      setRoles(Array.isArray(roleList) ? roleList : [])
+      setPermissions(Array.isArray(permissionList) ? permissionList : [])
+      authChecked.value = true
+      return user.value
+    } catch (error) {
+      clearAuth()
+      throw error
+    }
+  }
+
+  async function ensureAuthChecked() {
+    if (authChecked.value) {
+      return
+    }
+
+    if (!token.value) {
+      clearAuth()
+      return
+    }
+
+    try {
+      await syncCurrentUser()
+    } catch (error) {
+      console.warn('[Auth] Failed to sync current user:', error?.message || error)
+    }
+  }
+
   function checkAuthOnAppStart() {
     console.log('[Auth] Checking auth status on app start')
     if (!isLoggedIn.value) {
@@ -163,7 +208,7 @@ export const useAuthStore = defineStore('auth', () => {
       clearAuth()
     } else {
       console.log('[Auth] Session restored for user:', user.value.email)
-      // 可選：此處呼叫 /auth/me 重新同步權限
+      authChecked.value = false
     }
   }
 
@@ -189,6 +234,8 @@ export const useAuthStore = defineStore('auth', () => {
     clearAuth,
     hasPermission,
     hasRole,
-    checkAuthOnAppStart
+    checkAuthOnAppStart,
+    syncCurrentUser,
+    ensureAuthChecked
   }
 })

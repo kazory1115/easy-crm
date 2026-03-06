@@ -2,12 +2,20 @@
 
 namespace App\Services;
 
+use App\Models\Order;
 use App\Models\Quote;
 use App\Models\QuoteItem;
 use Illuminate\Support\Facades\DB;
 
 class QuoteService
 {
+    protected OrderService $orderService;
+
+    public function __construct(OrderService $orderService)
+    {
+        $this->orderService = $orderService;
+    }
+
     /**
      * 建立新的報價單及其品項。
      *
@@ -76,5 +84,17 @@ class QuoteService
 
             return $quote;
         });
+    }
+
+    /**
+     * 將已核准的報價單轉換為訂單。
+     *
+     * @param Quote $quote
+     * @param int $userId
+     * @return Order
+     */
+    public function createOrderFromQuote(Quote $quote, int $userId): Order
+    {
+        return $this->orderService->createOrderFromQuote($quote, $userId);
     }
 }

@@ -8,5 +8,5 @@ export const moduleInfo = {
   id: 'staff',
   name: '員工管理',
   version: '0.0.1',
-  description: '員工資料、角色權限管理'
+  description: '員工資料管理與操作紀錄'
 };

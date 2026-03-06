@@ -10,7 +10,7 @@ export default [
     meta: {
       title: '報價單',
       icon: 'file-lines',
-      requiresAuth: false, // 暫時不需要認證（後續整合時改為 true）
+      requiresAuth: true,
       permissions: ['quote.view']
     },
     children: [

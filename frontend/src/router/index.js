@@ -104,44 +104,42 @@ const router = createRouter({
 /**
  * 全域前置守衛 - 認證檢查
  */
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from) => {
   const authStore = useAuthStore()
   const appStore = useAppStore()
 
   // 開始載入
   appStore.setLoading(true)
 
-  const isLoggedIn = authStore.isLoggedIn;
+  await authStore.ensureAuthChecked()
+  const isLoggedIn = authStore.isLoggedIn
 
   // 如果已登入，且要前往登入頁，則導向首頁
   if (isLoggedIn && to.name === 'Login') {
-    return next({ name: 'Profile' });
+    return { name: 'Profile' }
   }
 
   // 檢查路由是否需要認證
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!isLoggedIn) {
       // 若未登入，導向登入頁
-      return next({
+      return {
         name: 'Login',
         query: { redirect: to.fullPath }
-      });
+      }
     }
   }
 
   // 檢查權限 (保留原有邏輯)
   if (to.meta.permissions) {
-    const hasPermission = authStore.hasPermission(to.meta.permissions);
+    const hasPermission = authStore.hasPermission(to.meta.permissions)
     if (!hasPermission) {
-      appStore.showNotification({
-        type: 'error',
-        message: '您沒有權限訪問此頁面'
-      })
-      return next(from.path || '/');
+      appStore.showError('您沒有權限訪問此頁面')
+      return from.path || '/'
     }
   }
 
-  next();
+  return true
 })
 
 /**

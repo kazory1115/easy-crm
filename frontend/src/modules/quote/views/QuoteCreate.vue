@@ -178,12 +178,12 @@ table {
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import LoadingPanel from '@/components/LoadingPanel.vue';
-import { getItems } from '@/utils/dataManager'; // 一般項目暫時保留使用 LocalStorage
-import { useQuote } from '../composables/useQuote';
+import { useItem, useQuote } from '../composables/useQuote';
 import { useTemplate } from '../composables/useQuote';
 import QuoteItemsTable from '../components/QuoteItemsTable.vue';
 
 const { createQuote } = useQuote();
+const { items: availableItems, fetchItems } = useItem();
 const { templates, fetchTemplates } = useTemplate();
 
 const customerName = ref('');
@@ -193,8 +193,7 @@ const notes = ref('');
 const date = ref(new Date().toISOString().slice(0, 10)); // 預設當日 YYYY-MM-DD
 const items = ref([]);
 
-// 從 LocalStorage 載入項目範本資料
-const itemDatas = ref([]);
+const itemDatas = computed(() => availableItems.value);
 const templateDatas = computed(() => templates.value);
 
 // 載入狀態
@@ -210,14 +209,9 @@ onMounted(async () => {
   try {
     initialLoading.value = true;
 
-    // 從 LocalStorage 載入項目範本資料
-    itemDatas.value = getItems();
-    console.log('📦 [QuoteCreate] 載入的一般項目:', itemDatas.value);
+    await fetchItems();
 
-    // 從 API 載入範本
     await fetchTemplates();
-    console.log('📦 [QuoteCreate] 載入的模板:', templates.value);
-    console.log('📦 [QuoteCreate] templateDatas computed:', templateDatas.value);
 
     // 初始化時至少要有一行
     if (items.value.length === 0) {

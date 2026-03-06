@@ -27,4 +27,20 @@ class OpportunityLog extends Model
         'new_data' => 'array',
         'created_at' => 'datetime',
     ];
+
+    /**
+     * 關聯：商機
+     */
+    public function opportunity()
+    {
+        return $this->belongsTo(Opportunity::class);
+    }
+
+    /**
+     * 關聯：操作者
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

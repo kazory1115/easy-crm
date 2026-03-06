@@ -22,5 +22,23 @@ class CustomerActivity extends Model
     protected $casts = [
         'activity_at' => 'datetime',
         'next_action_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    /**
+     * 關聯：所屬客戶
+     */
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * 關聯：負責使用者
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

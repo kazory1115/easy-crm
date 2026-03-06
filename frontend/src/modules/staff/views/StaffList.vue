@@ -1,38 +1,21 @@
 <template>
   <div class="staff-list">
-    <!-- 頁面標題與操作 -->
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold text-gray-800">員工列表</h1>
-      <div class="flex gap-2">
-        <button
-          v-if="selectedIds.length > 0"
-          @click="handleBatchDelete"
-          class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-        >
-          刪除選取 ({{ selectedIds.length }})
-        </button>
-        <button
-          @click="handleExport"
-          class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-        >
-          匯出
-        </button>
-        <router-link
-          to="/staff/create"
-          class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-        >
-          新增員工
-        </router-link>
-      </div>
+      <button
+        @click="openCreateModal"
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+      >
+        新增員工
+      </button>
     </div>
 
-    <!-- 搜尋與篩選 -->
     <div class="app-card p-4 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <input
           v-model="filters.search"
           type="text"
-          placeholder="搜尋姓名、信箱、員工編號..."
+          placeholder="搜尋姓名、信箱..."
           class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
           @input="debouncedSearch"
         />
@@ -46,16 +29,6 @@
             {{ dept.name }}
           </option>
         </select>
-        <select
-          v-model="filters.status"
-          class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          @change="loadStaffList"
-        >
-          <option value="">全部狀態</option>
-          <option value="active">在職</option>
-          <option value="inactive">離職</option>
-          <option value="suspended">停權</option>
-        </select>
         <button
           @click="resetFilters"
           class="px-4 py-2 border rounded-lg hover:bg-gray-50"
@@ -65,27 +38,17 @@
       </div>
     </div>
 
-    <!-- 統計卡片 -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       <div class="app-card p-4">
-        <div class="text-sm text-gray-500">總員工數</div>
+        <div class="text-sm text-gray-500">本頁總員工數</div>
         <div class="text-2xl font-bold text-gray-800">{{ stats.total }}</div>
       </div>
       <div class="app-card p-4">
-        <div class="text-sm text-gray-500">在職</div>
-        <div class="text-2xl font-bold text-green-600">{{ stats.active }}</div>
-      </div>
-      <div class="app-card p-4">
-        <div class="text-sm text-gray-500">離職</div>
-        <div class="text-2xl font-bold text-gray-400">{{ stats.inactive }}</div>
-      </div>
-      <div class="app-card p-4">
-        <div class="text-sm text-gray-500">停權</div>
-        <div class="text-2xl font-bold text-red-600">{{ stats.suspended }}</div>
+        <div class="text-sm text-gray-500">部門數</div>
+        <div class="text-2xl font-bold text-blue-600">{{ departments.length }}</div>
       </div>
     </div>
 
-    <!-- 員工列表 -->
     <div class="app-card overflow-hidden">
       <LoadingPanel v-if="loading" variant="table" />
       <div v-else-if="staffList.length === 0" class="empty-state">
@@ -94,57 +57,29 @@
       <table v-else class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-4 py-3 text-left">
-              <input
-                type="checkbox"
-                :checked="isAllSelected"
-                @change="toggleSelectAll"
-                class="rounded"
-              />
-            </th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">員工編號</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">姓名</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">部門</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">職稱</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">信箱</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">狀態</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-for="staff in staffList" :key="staff.id" class="hover:bg-gray-50">
-            <td class="px-4 py-4">
-              <input
-                type="checkbox"
-                :checked="selectedIds.includes(staff.id)"
-                @change="toggleSelect(staff.id)"
-                class="rounded"
-              />
-            </td>
             <td class="px-4 py-4 text-sm text-gray-900">{{ staff.employeeId }}</td>
             <td class="px-4 py-4 text-sm font-medium text-gray-900">{{ staff.name }}</td>
             <td class="px-4 py-4 text-sm text-gray-500">{{ getDepartmentName(staff.department) }}</td>
-            <td class="px-4 py-4 text-sm text-gray-500">{{ staff.position }}</td>
+            <td class="px-4 py-4 text-sm text-gray-500">{{ staff.position || '-' }}</td>
             <td class="px-4 py-4 text-sm text-gray-500">{{ staff.email }}</td>
-            <td class="px-4 py-4">
-              <span :class="getStatusClass(staff.status)">
-                {{ getStatusText(staff.status) }}
-              </span>
-            </td>
             <td class="px-4 py-4 text-sm">
-              <div class="flex gap-2">
-                <router-link
-                  :to="`/staff/detail/${staff.id}`"
+              <div class="flex gap-3 items-center">
+                <button
+                  @click="openEditModal(staff)"
                   class="text-blue-600 hover:text-blue-800"
                 >
-                  檢視
-                </router-link>
-                <router-link
-                  :to="`/staff/edit/${staff.id}`"
-                  class="text-green-600 hover:text-green-800"
-                >
                   編輯
-                </router-link>
+                </button>
                 <button
                   @click="handleDelete(staff.id)"
                   class="text-red-600 hover:text-red-800"
@@ -157,46 +92,146 @@
         </tbody>
       </table>
     </div>
+
+    <div
+      v-if="showModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-800">
+              {{ isEditMode ? '編輯員工' : '新增員工' }}
+            </h2>
+            <button
+              class="text-gray-400 hover:text-gray-600"
+              @click="closeModal"
+            >
+              取消
+            </button>
+          </div>
+
+          <form class="space-y-4" @submit.prevent="submitStaff">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm text-gray-600 mb-1">姓名 *</label>
+                <input
+                  v-model.trim="form.name"
+                  type="text"
+                  required
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-gray-600 mb-1">Email *</label>
+                <input
+                  v-model.trim="form.email"
+                  type="email"
+                  required
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-gray-600 mb-1">
+                  密碼 {{ isEditMode ? '(留空代表不更新)' : '*' }}
+                </label>
+                <input
+                  v-model="form.password"
+                  :required="!isEditMode"
+                  type="password"
+                  minlength="8"
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-gray-600 mb-1">電話</label>
+                <input
+                  v-model.trim="form.phone"
+                  type="text"
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-gray-600 mb-1">部門</label>
+                <input
+                  v-model.trim="form.department"
+                  type="text"
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm text-gray-600 mb-1">職稱</label>
+                <input
+                  v-model.trim="form.position"
+                  type="text"
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                @click="closeModal"
+                class="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                取消
+              </button>
+              <button
+                type="submit"
+                :disabled="loading"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {{ isEditMode ? '儲存變更' : '建立員工' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useAppStore } from '@/stores/app'
 import LoadingPanel from '@/components/LoadingPanel.vue'
 import { useStaff } from '../composables/useStaff'
 
+const appStore = useAppStore()
 const {
   staffList,
   departments,
   loading,
   stats,
   fetchStaffList,
-  fetchDepartments,
-  deleteStaff,
-  batchDeleteStaff,
-  exportStaff
+  createStaff,
+  updateStaff,
+  deleteStaff
 } = useStaff()
 
-// 篩選條件
 const filters = ref({
   search: '',
+  department: ''
+})
+
+const showModal = ref(false)
+const editingId = ref(null)
+const form = ref({
+  name: '',
+  email: '',
+  password: '',
+  phone: '',
   department: '',
-  status: ''
+  position: ''
 })
 
-// 選取狀態
-const selectedIds = ref([])
+const isEditMode = computed(() => editingId.value !== null)
 
-const isAllSelected = computed(() => {
-  return staffList.value.length > 0 && selectedIds.value.length === staffList.value.length
-})
-
-// 載入員工列表
 const loadStaffList = async () => {
   await fetchStaffList(filters.value)
 }
 
-// 防抖搜尋
 let searchTimeout = null
 const debouncedSearch = () => {
   clearTimeout(searchTimeout)
@@ -205,74 +240,96 @@ const debouncedSearch = () => {
   }, 300)
 }
 
-// 重置篩選
 const resetFilters = () => {
-  filters.value = { search: '', department: '', status: '' }
+  filters.value = { search: '', department: '' }
   loadStaffList()
 }
 
-// 選取操作
-const toggleSelect = (id) => {
-  const index = selectedIds.value.indexOf(id)
-  if (index === -1) {
-    selectedIds.value.push(id)
-  } else {
-    selectedIds.value.splice(index, 1)
+const resetForm = () => {
+  form.value = {
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+    department: '',
+    position: ''
   }
 }
 
-const toggleSelectAll = () => {
-  if (isAllSelected.value) {
-    selectedIds.value = []
-  } else {
-    selectedIds.value = staffList.value.map(s => s.id)
-  }
+const openCreateModal = () => {
+  editingId.value = null
+  resetForm()
+  showModal.value = true
 }
 
-// 刪除操作
+const openEditModal = (staff) => {
+  editingId.value = staff.id
+  form.value = {
+    name: staff.name || '',
+    email: staff.email || '',
+    password: '',
+    phone: staff.phone || '',
+    department: staff.department || '',
+    position: staff.position || ''
+  }
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  editingId.value = null
+  resetForm()
+}
+
+const buildPayload = () => {
+  const payload = {
+    name: form.value.name,
+    email: form.value.email,
+    phone: form.value.phone || null,
+    department: form.value.department || null,
+    position: form.value.position || null
+  }
+
+  if (form.value.password) {
+    payload.password = form.value.password
+  }
+
+  return payload
+}
+
+const submitStaff = async () => {
+  const payload = buildPayload()
+
+  if (!isEditMode.value && !payload.password) {
+    appStore.showError('新增員工必須填寫密碼')
+    return
+  }
+
+  const result = isEditMode.value
+    ? await updateStaff(editingId.value, payload)
+    : await createStaff(payload)
+
+  if (!result) return
+
+  closeModal()
+  await loadStaffList()
+}
+
 const handleDelete = async (id) => {
-  if (confirm('確定要刪除此員工？')) {
-    await deleteStaff(id)
-    await loadStaffList()
-  }
+  if (!confirm('確定要刪除此員工？')) return
+
+  const success = await deleteStaff(id)
+  if (!success) return
+  await loadStaffList()
 }
 
-const handleBatchDelete = async () => {
-  if (confirm(`確定要刪除 ${selectedIds.value.length} 位員工？`)) {
-    await batchDeleteStaff(selectedIds.value)
-    selectedIds.value = []
-    await loadStaffList()
-  }
-}
-
-// 匯出
-const handleExport = async () => {
-  await exportStaff('excel', selectedIds.value)
-}
-
-// 工具函數
 const getDepartmentName = (deptId) => {
-  const dept = departments.value.find(d => d.id === deptId)
-  return dept?.name || deptId
-}
-
-const getStatusText = (status) => {
-  const map = { active: '在職', inactive: '離職', suspended: '停權' }
-  return map[status] || status
-}
-
-const getStatusClass = (status) => {
-  const base = 'px-2 py-1 text-xs rounded-full'
-  const map = {
-    active: 'bg-green-100 text-green-800',
-    inactive: 'bg-gray-100 text-gray-800',
-    suspended: 'bg-red-100 text-red-800'
-  }
-  return `${base} ${map[status] || ''}`
+  if (!deptId) return '-'
+  const department = departments.value.find((item) => item.id === deptId)
+  return department?.name || deptId
 }
 
 onMounted(async () => {
-  await fetchDepartments()
   await loadStaffList()
 })
 </script>

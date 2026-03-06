@@ -55,6 +55,21 @@ class Item extends Model
         return $this->hasMany(QuoteItem::class);
     }
 
+    public function stockLevels()
+    {
+        return $this->hasMany(StockLevel::class);
+    }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    public function stockAdjustments()
+    {
+        return $this->hasMany(StockAdjustment::class);
+    }
+
     /**
      * Scope: 只取得啟用的項目
      */

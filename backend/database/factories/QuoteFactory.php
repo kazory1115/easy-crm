@@ -21,12 +21,13 @@ class QuoteFactory extends Factory
     {
         $createdAt = fake()->dateTimeBetween('-6 months', 'now');
         $validUntil = (clone $createdAt)->modify('+30 days');
+        $internetFaker = fake('en_US');
 
         return [
             // quote_number 會由 Model 自動生成
             'customer_id' => null, // 將在 Seeder 中設定
             'customer_name' => fake('zh_TW')->company() . '有限公司',
-            'contact_email' => fake()->companyEmail(),
+            'contact_email' => $internetFaker->companyEmail(),
             'contact_phone' => '02-' . fake()->numerify('########'),
 
             'project_name' => fake()->randomElement([

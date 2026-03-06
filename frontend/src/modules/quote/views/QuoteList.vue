@@ -91,11 +91,11 @@ table {
           <!-- 項目摘要 -->
           <div class="mt-4 bg-gray-50 p-4 rounded-lg">
             <h4 class="text-sm font-semibold text-gray-700 mb-2">
-              項目摘要（共 {{ quote.items.length }} 項）
+              項目摘要（共 {{ getQuoteItems(quote).length }} 項）
             </h4>
             <div class="text-xs text-gray-600 space-y-1">
               <div
-                v-for="(item, idx) in quote.items.slice(0, 3)"
+                v-for="(item, idx) in getQuoteItems(quote).slice(0, 3)"
                 :key="idx"
                 class="flex justify-between"
               >
@@ -104,8 +104,8 @@ table {
                   >{{ (item.quantity * item.price).toLocaleString() }} 元</span
                 >
               </div>
-              <div v-if="quote.items.length > 3" class="text-gray-400 italic">
-                ...還有 {{ quote.items.length - 3 }} 個項目
+              <div v-if="getQuoteItems(quote).length > 3" class="text-gray-400 italic">
+                ...還有 {{ getQuoteItems(quote).length - 3 }} 個項目
               </div>
             </div>
           </div>
@@ -216,7 +216,7 @@ table {
                 </thead>
                 <tbody class="divide-y divide-gray-100 bg-white">
                   <tr
-                    v-for="(item, index) in selectedQuote.items"
+                    v-for="(item, index) in getQuoteItems(selectedQuote)"
                     :key="index"
                     class="hover:bg-gray-50 transition-colors"
                   >
@@ -456,6 +456,10 @@ function getItemName(name) {
   const div = document.createElement('div');
   div.innerHTML = name;
   return div.textContent || div.innerText || name;
+}
+
+function getQuoteItems(quote) {
+  return Array.isArray(quote?.items) ? quote.items : [];
 }
 
 // 成功提示

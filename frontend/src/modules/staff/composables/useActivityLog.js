@@ -33,6 +33,13 @@ export function useActivityLog() {
     total: 0
   })
 
+  const mapPagination = (response = {}) => ({
+    current_page: response.current_page || 1,
+    per_page: response.per_page || 20,
+    total: response.total || 0,
+    last_page: response.last_page || 1
+  })
+
   // ==================== 操作紀錄查詢 ====================
 
   /**
@@ -45,17 +52,13 @@ export function useActivityLog() {
     try {
       const response = await logApi.getActivityLogs(params)
 
-      // 後端回應格式: { data: [...], meta: { current_page, per_page, total, last_page } }
       logs.value = response.data || []
-
-      if (response.meta) {
-        pagination.value = response.meta
-      }
+      pagination.value = mapPagination(response)
 
       return response
     } catch (e) {
       error.value = e.message || '載入操作紀錄失敗'
-      appStore.showNotification(error.value, 'error')
+      appStore.showError(error.value)
       return null
     } finally {
       loading.value = false
@@ -75,7 +78,7 @@ export function useActivityLog() {
       return currentLog.value
     } catch (e) {
       error.value = e.message || '載入紀錄詳情失敗'
-      appStore.showNotification(error.value, 'error')
+      appStore.showError(error.value)
       return null
     } finally {
       loading.value = false
@@ -92,15 +95,12 @@ export function useActivityLog() {
     try {
       const response = await logApi.getMyActivityLogs(params)
       logs.value = response.data || []
-
-      if (response.meta) {
-        pagination.value = response.meta
-      }
+      pagination.value = mapPagination(response)
 
       return response
     } catch (e) {
       error.value = e.message || '載入我的操作紀錄失敗'
-      appStore.showNotification(error.value, 'error')
+      appStore.showError(error.value)
       return null
     } finally {
       loading.value = false
@@ -117,15 +117,12 @@ export function useActivityLog() {
     try {
       const response = await logApi.getModuleActivityLogs(module, params)
       logs.value = response.data || []
-
-      if (response.meta) {
-        pagination.value = response.meta
-      }
+      pagination.value = mapPagination(response)
 
       return response
     } catch (e) {
       error.value = e.message || '載入模組操作紀錄失敗'
-      appStore.showNotification(error.value, 'error')
+      appStore.showError(error.value)
       return null
     } finally {
       loading.value = false
@@ -141,11 +138,16 @@ export function useActivityLog() {
 
     try {
       const response = await logApi.getActivityLogStats(params)
-      stats.value = response.data || response
+      const rawStats = response.data || {}
+      stats.value = {
+        total: rawStats.total || 0,
+        byEvent: rawStats.by_event || {},
+        byModule: rawStats.by_module || {}
+      }
       return stats.value
     } catch (e) {
       error.value = e.message || '載入統計資料失敗'
-      appStore.showNotification(error.value, 'error')
+      appStore.showError(error.value)
       return null
     } finally {
       loading.value = false

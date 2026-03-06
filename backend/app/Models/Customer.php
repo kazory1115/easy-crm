@@ -14,12 +14,19 @@ class Customer extends Model
     protected $fillable = [
         'name',
         'contact_person',
-        'contact_phone',
-        'contact_email',
-        'company_tax_id',
+        'phone',
+        'mobile',
+        'email',
+        'tax_id',
+        'website',
+        'industry',
         'address',
         'notes',
         'status',
+        // 向下相容舊欄位命名（透過 mutator 映射到實際欄位）
+        'contact_phone',
+        'contact_email',
+        'company_tax_id',
         'created_by',
         'updated_by',
     ];
@@ -55,6 +62,30 @@ class Customer extends Model
     }
 
     /**
+     * 關聯：客戶聯絡人
+     */
+    public function contacts()
+    {
+        return $this->hasMany(CustomerContact::class);
+    }
+
+    /**
+     * 關聯：客戶活動
+     */
+    public function activities()
+    {
+        return $this->hasMany(CustomerActivity::class);
+    }
+
+    /**
+     * 關聯：商機
+     */
+    public function opportunities()
+    {
+        return $this->hasMany(Opportunity::class);
+    }
+
+    /**
      * Scope: 只取得啟用的客戶
      */
     public function scopeActive($query)
@@ -74,8 +105,49 @@ class Customer extends Model
         return $query->where(function ($q) use ($keyword) {
             $q->where('name', 'like', "%{$keyword}%")
                 ->orWhere('contact_person', 'like', "%{$keyword}%")
-                ->orWhere('contact_phone', 'like', "%{$keyword}%")
-                ->orWhere('contact_email', 'like', "%{$keyword}%");
+                ->orWhere('phone', 'like', "%{$keyword}%")
+                ->orWhere('mobile', 'like', "%{$keyword}%")
+                ->orWhere('email', 'like', "%{$keyword}%")
+                ->orWhere('tax_id', 'like', "%{$keyword}%");
         });
+    }
+
+    /**
+     * 向下相容：舊欄位 contact_phone -> phone
+     */
+    public function setContactPhoneAttribute($value): void
+    {
+        $this->attributes['phone'] = $value;
+    }
+
+    /**
+     * 向下相容：舊欄位 contact_email -> email
+     */
+    public function setContactEmailAttribute($value): void
+    {
+        $this->attributes['email'] = $value;
+    }
+
+    /**
+     * 向下相容：舊欄位 company_tax_id -> tax_id
+     */
+    public function setCompanyTaxIdAttribute($value): void
+    {
+        $this->attributes['tax_id'] = $value;
+    }
+
+    public function getContactPhoneAttribute(): ?string
+    {
+        return $this->attributes['phone'] ?? null;
+    }
+
+    public function getContactEmailAttribute(): ?string
+    {
+        return $this->attributes['email'] ?? null;
+    }
+
+    public function getCompanyTaxIdAttribute(): ?string
+    {
+        return $this->attributes['tax_id'] ?? null;
     }
 }

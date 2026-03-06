@@ -381,6 +381,11 @@ const loadActivityLogs = async (page = 1) => {
     per_page: 20,
   };
 
+  if (params.module) {
+    params.log_name = params.module;
+  }
+  delete params.module;
+
   if (viewMode.value === "my") {
     await fetchMyActivityLogs(params);
   } else {

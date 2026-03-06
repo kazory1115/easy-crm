@@ -80,27 +80,88 @@ export const moduleConfig = {
     ]
   },
 
+  // 訂單管理模組
+  order: {
+    id: 'order',
+    name: '訂單管理',
+    icon: 'clipboard-list',
+    enabled: true, // ✅ 已啟用（MVP 版本）
+    path: '/order',
+    description: '訂單建立、編輯、詳情與轉單流程',
+    permissions: ['order.view', 'order.create', 'order.edit', 'order.delete'],
+    order: 2,
+    version: '1.0.0',
+    meta: {
+      color: '#2563eb',
+      badge: 'MVP',
+      features: [
+        '訂單列表與篩選',
+        '建立與編輯',
+        '訂單詳情',
+        '報價轉單'
+      ]
+    },
+    children: [
+      {
+        id: 'order-create',
+        name: '新增訂單',
+        path: '/order/create',
+        icon: 'plus',
+        permission: 'order.create'
+      },
+      {
+        id: 'order-list',
+        name: '訂單列表',
+        path: '/order/list',
+        icon: 'scroll',
+        permission: 'order.view'
+      }
+    ]
+  },
+
   // 客戶管理模組
   crm: {
     id: 'crm',
     name: '客戶管理',
     icon: 'users',
-    enabled: false, // ⏳ 未啟用（開發中）
+    enabled: true, // ✅ 已啟用（MVP 版本）
     path: '/crm',
     description: '客戶資料、聯絡歷程、商機管理',
     permissions: ['crm.view', 'crm.create', 'crm.edit', 'crm.delete'],
-    order: 2,
-    version: '0.0.0',
+    order: 3,
+    version: '1.0.0',
     meta: {
       color: '#10b981',
-      badge: '開發中',
+      badge: 'MVP',
       features: [
         '客戶資料管理',
         '聯絡歷程追蹤',
-        '商機管理',
-        '客戶等級分類'
+        '商機管理'
       ]
-    }
+    },
+    children: [
+      {
+        id: 'crm-customer-list',
+        name: '客戶列表',
+        path: '/crm/customers',
+        icon: 'address-book',
+        permission: 'crm.view'
+      },
+      {
+        id: 'crm-customer-create',
+        name: '新增客戶',
+        path: '/crm/customers/create',
+        icon: 'user-plus',
+        permission: 'crm.create'
+      },
+      {
+        id: 'crm-opportunity-list',
+        name: '商機列表',
+        path: '/crm/opportunities',
+        icon: 'chart-line',
+        permission: 'crm.view'
+      }
+    ]
   },
 
   // 進銷存模組
@@ -108,22 +169,52 @@ export const moduleConfig = {
     id: 'inventory',
     name: '進銷存',
     icon: 'box',
-    enabled: false, // ⏳ 未啟用（規劃中）
+    enabled: true, // ✅ 已啟用（MVP 版本）
     path: '/inventory',
-    description: '商品管理、庫存追蹤、進銷記錄',
+    description: '倉庫、庫存、異動與調整管理',
     permissions: ['inventory.view', 'inventory.create', 'inventory.edit', 'inventory.delete'],
-    order: 3,
-    version: '0.0.0',
+    order: 4,
+    version: '1.0.0',
     meta: {
       color: '#f59e0b',
-      badge: '規劃中',
+      badge: 'MVP',
       features: [
-        '商品管理',
+        '倉庫列表',
         '庫存追蹤',
         '進銷記錄',
-        '庫存警報'
+        '庫存調整'
       ]
-    }
+    },
+    children: [
+      {
+        id: 'inventory-stock-list',
+        name: '庫存列表',
+        path: '/inventory/stock',
+        icon: 'boxes-stacked',
+        permission: 'inventory.view'
+      },
+      {
+        id: 'inventory-warehouse-list',
+        name: '倉庫列表',
+        path: '/inventory/warehouses',
+        icon: 'warehouse',
+        permission: 'inventory.view'
+      },
+      {
+        id: 'inventory-movements',
+        name: '庫存異動',
+        path: '/inventory/movements',
+        icon: 'right-left',
+        permission: 'inventory.edit'
+      },
+      {
+        id: 'inventory-adjustments',
+        name: '庫存調整',
+        path: '/inventory/adjustments',
+        icon: 'sliders',
+        permission: 'inventory.edit'
+      }
+    ]
   },
 
   // 員工管理模組
@@ -133,18 +224,16 @@ export const moduleConfig = {
     icon: 'briefcase',
     enabled: true, // ✅ 已啟用（MVP 版本）
     path: '/staff',
-    description: '員工資料、角色權限管理、操作紀錄',
-    permissions: ['staff.view', 'staff.create', 'staff.edit', 'staff.delete', 'role.manage'],
-    order: 4,
+    description: '員工資料管理、操作紀錄',
+    permissions: ['staff.view', 'staff.create', 'staff.edit', 'staff.delete'],
+    order: 5,
     version: '1.0.0',
     meta: {
       color: '#8b5cf6',
       badge: 'MVP',
       features: [
         '員工資料管理',
-        '操作紀錄查詢',
-        '角色權限配置',
-        '組織架構'
+        '操作紀錄查詢'
       ]
     },
     children: [
@@ -170,22 +259,38 @@ export const moduleConfig = {
     id: 'report',
     name: '報表中心',
     icon: 'chart-bar',
-    enabled: false, // ⏳ 未啟用（規劃中）
+    enabled: true, // ✅ 已啟用（MVP 版本）
     path: '/report',
-    description: '銷售報表、庫存報表、自定義報表',
+    description: '報價、訂單、庫存 dashboard 與匯出任務追蹤',
     permissions: ['report.view', 'report.export'],
-    order: 5,
-    version: '0.0.0',
+    order: 6,
+    version: '1.0.0',
     meta: {
-      color: '#ec4899',
-      badge: '規劃中',
+      color: '#0f766e',
+      badge: 'MVP',
       features: [
         '儀表板',
-        '銷售報表',
-        '庫存報表',
-        '自定義報表'
+        '報價與訂單摘要',
+        '低庫存監控',
+        '匯出任務紀錄'
       ]
-    }
+    },
+    children: [
+      {
+        id: 'report-dashboard',
+        name: '報表總覽',
+        path: '/report/dashboard',
+        icon: 'chart-bar',
+        permission: 'report.view'
+      },
+      {
+        id: 'report-exports',
+        name: '匯出紀錄',
+        path: '/report/exports',
+        icon: 'scroll',
+        permission: 'report.view'
+      }
+    ]
   }
 }
 
