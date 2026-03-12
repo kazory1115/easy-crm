@@ -8,6 +8,7 @@ use App\Services\UserPermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -61,6 +62,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validatePayload($request, null, true);
+        $this->guardAccessControlMutation($validated);
 
         $user = DB::transaction(function () use ($validated) {
             $user = User::create([
@@ -91,6 +93,7 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         $validated = $this->validatePayload($request, $id, false);
+        $this->guardAccessControlMutation($validated);
 
         $user = DB::transaction(function () use ($user, $validated) {
             $payload = collect($validated)
@@ -225,7 +228,11 @@ class UserController extends Controller
 
         return $request->validate([
             'name' => ($isCreate ? 'required' : 'sometimes|required') . '|string|max:255',
-            'email' => ($isCreate ? 'required' : 'sometimes|required') . '|email|unique:users,email,' . ($userId ?? 'NULL'),
+            'email' => [
+                $isCreate ? 'required' : 'sometimes',
+                'email',
+                Rule::unique('users', 'email')->ignore($userId),
+            ],
             'password' => $passwordRules,
             'phone' => 'nullable|string|max:20',
             'department' => 'nullable|string|max:100',
@@ -256,6 +263,16 @@ class UserController extends Controller
 
         if (!in_array('role.manage', $permissions, true) && !$targetUser->hasRole(['admin', 'super-admin'])) {
             abort(422, '不可移除自己最後的權限管理能力');
+        }
+    }
+
+    private function guardAccessControlMutation(array $validated): void
+    {
+        $touchingRoles = array_key_exists('roles', $validated);
+        $touchingPermissions = array_key_exists('direct_permissions', $validated);
+
+        if (($touchingRoles || $touchingPermissions) && !auth()->user()?->can('role.manage')) {
+            abort(403, '沒有管理角色與權限的權限');
         }
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
