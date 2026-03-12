@@ -3,169 +3,112 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\QuoteMail;
 use App\Models\Quote;
-use App\Models\QuoteItem;
-use App\Services\QuoteService; // Added QuoteService
+use App\Services\QuoteDocumentService;
+use App\Services\QuoteService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class QuoteController extends Controller
 {
-    protected QuoteService $quoteService; // Injected QuoteService
-
-    public function __construct(QuoteService $quoteService)
-    {
-        $this->quoteService = $quoteService;
+    public function __construct(
+        protected QuoteService $quoteService,
+        protected QuoteDocumentService $quoteDocumentService
+    ) {
     }
 
-    /**
-     * 取得報價單列表
-     */
     public function index(Request $request)
     {
         $query = Quote::with(['customer', 'creator', 'items']);
 
-        // 搜尋
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->search($request->search);
         }
 
-        // 狀態篩選
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->byStatus($request->status);
         }
 
-        // 日期範圍篩選
-        if ($request->has('start_date') || $request->has('end_date')) {
+        if ($request->filled('start_date') || $request->filled('end_date')) {
             $query->dateRange($request->start_date, $request->end_date);
         }
 
-        // 排序
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $perPage = (int) $request->get('per_page', 15);
 
-        // 分頁
-        $perPage = $request->get('per_page', 15);
-        $quotes = $query->paginate($perPage);
-
-        return response()->json($quotes);
+        return response()->json(
+            $query->orderBy($sortBy, $sortOrder)->paginate($perPage)
+        );
     }
 
-    /**
-     * 取得單一報價單
-     */
-    public function show($id)
+    public function show(int $id)
     {
-        $quote = Quote::with(['customer', 'items', 'creator', 'updater', 'logs.user'])
-            ->findOrFail($id);
+        $quote = Quote::with(['customer', 'items', 'creator', 'updater', 'logs.user'])->findOrFail($id);
 
-        return response()->json(['data' => $quote]);
+        return response()->json([
+            'data' => $quote,
+        ]);
     }
 
-    /**
-     * 建立報價單
-     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'customer_id' => 'nullable|exists:customers,id',
-            'customer_name' => 'required|string|max:255',
-            'contact_phone' => 'nullable|string|max:255',
-            'contact_email' => 'nullable|email|max:255',
-            'project_name' => 'nullable|string|max:255',
-            'quote_date' => 'required|date',
-            'valid_until' => 'nullable|date|after:quote_date',
-            'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'nullable|exists:items,id',
-            'items.*.type' => 'required|in:input,drop,template',
-            'items.*.name' => 'required|string|max:255',
-            'items.*.description' => 'nullable|string',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit' => 'required|string|max:50',
-            'items.*.price' => 'required|numeric|min:0',
-            'items.*.fields' => 'nullable|array',
-            'items.*.notes' => 'nullable|string',
-            'tax_rate' => 'nullable|numeric|min:0|max:1', // Added tax_rate validation
-        ]);
+        $validated = $request->validate($this->quoteRules());
 
         $quote = $this->quoteService->createQuote(
-            array_filter($validated, fn($key) => $key !== 'items', ARRAY_FILTER_USE_KEY),
+            array_filter($validated, fn ($key) => $key !== 'items', ARRAY_FILTER_USE_KEY),
             $validated['items'],
             auth()->id()
         );
 
-        // 重新載入關聯資料
-        $quote->load(['items', 'customer']);
-
         return response()->json([
             'message' => '報價單建立成功',
-            'data' => $quote,
+            'data' => $quote->load(['items', 'customer']),
         ], 201);
     }
 
-    /**
-     * 更新報價單
-     */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $quote = Quote::findOrFail($id);
+        $validated = $request->validate($this->quoteRules(true));
 
-        $validated = $request->validate([
-            'customer_id' => 'nullable|exists:customers,id',
-            'customer_name' => 'sometimes|required|string|max:255',
-            'contact_phone' => 'nullable|string|max:255',
-            'contact_email' => 'nullable|email|max:255',
-            'project_name' => 'nullable|string|max:255',
-            'quote_date' => 'sometimes|required|date',
-            'valid_until' => 'nullable|date',
-            'notes' => 'nullable|string',
-            'items' => 'sometimes|required|array|min:1',
-            'items.*.item_id' => 'nullable|exists:items,id',
-            'items.*.type' => 'required_with:items|in:input,drop,template',
-            'items.*.name' => 'required_with:items|string|max:255',
-            'items.*.description' => 'nullable|string',
-            'items.*.quantity' => 'required_with:items|integer|min:1',
-            'items.*.unit' => 'required_with:items|string|max:50',
-            'items.*.price' => 'required_with:items|numeric|min:0',
-            'items.*.fields' => 'nullable|array',
-            'items.*.notes' => 'nullable|string',
-            'tax_rate' => 'nullable|numeric|min:0|max:1', // Added tax_rate validation
-        ]);
-
-        $quote = $this->quoteService->updateQuote(
+        $updatedQuote = $this->quoteService->updateQuote(
             $quote,
-            array_filter($validated, fn($key) => $key !== 'items', ARRAY_FILTER_USE_KEY),
-            $validated['items'] ?? [], // Pass empty array if items are not present
+            array_filter($validated, fn ($key) => $key !== 'items', ARRAY_FILTER_USE_KEY),
+            $validated['items'] ?? $quote->items()->get()->map(function ($item) {
+                return [
+                    'item_id' => $item->item_id,
+                    'type' => $item->type,
+                    'name' => $item->name,
+                    'description' => $item->description,
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'price' => $item->price,
+                    'fields' => $item->fields,
+                    'notes' => $item->notes,
+                ];
+            })->all(),
             auth()->id()
         );
 
-        // 重新載入關聯資料
-        $quote->load(['items', 'customer']);
-
         return response()->json([
             'message' => '報價單更新成功',
-            'data' => $quote,
+            'data' => $updatedQuote->load(['items', 'customer']),
         ]);
     }
 
-    /**
-     * 刪除報價單
-     */
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $quote = Quote::findOrFail($id);
         $quote->delete();
 
         return response()->json([
-            'message' => '報價單刪除成功',
+            'message' => '報價單已刪除',
         ]);
     }
 
-    /**
-     * 批次刪除報價單
-     */
     public function batchDelete(Request $request)
     {
         $validated = $request->validate([
@@ -180,13 +123,9 @@ class QuoteController extends Controller
         ]);
     }
 
-    /**
-     * 更新報價單狀態
-     */
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, int $id)
     {
         $quote = Quote::findOrFail($id);
-
         $validated = $request->validate([
             'status' => 'required|in:draft,sent,approved,rejected,expired',
         ]);
@@ -210,69 +149,80 @@ class QuoteController extends Controller
         ]);
     }
 
-    /**
-     * 發送報價單
-     */
-    public function send(Request $request, $id)
+    public function send(Request $request, int $id)
     {
-        $quote = Quote::findOrFail($id);
+        $quote = Quote::with(['items', 'customer'])->findOrFail($id);
 
         $validated = $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|email|max:255',
             'subject' => 'nullable|string|max:255',
             'message' => 'nullable|string',
         ]);
 
-        // TODO: 實作郵件發送功能
-        // Mail::to($validated['email'])->send(new QuoteMail($quote, $validated));
+        $subject = $validated['subject'] ?: sprintf('報價單 %s', $quote->quote_number);
 
-        // 更新狀態
+        try {
+            Mail::to($validated['email'])->send(new QuoteMail(
+                quote: $quote,
+                subjectLine: $subject,
+                messageBody: $validated['message'] ?? null,
+                pdfBinary: $this->quoteDocumentService->buildPdfBinary($quote),
+                pdfFilename: $this->quoteDocumentService->buildFilename($quote, 'pdf')
+            ));
+        } catch (Throwable $exception) {
+            return response()->json([
+                'message' => '報價單寄送失敗',
+                'error' => $exception->getMessage(),
+            ], 500);
+        }
+
         $quote->status = 'sent';
         $quote->sent_at = now();
         $quote->updated_by = auth()->id();
         $quote->save();
 
         return response()->json([
-            'message' => '報價單已發送',
+            'message' => '報價單已寄出',
             'data' => $quote,
         ]);
     }
 
-    /**
-     * 取得報價單統計
-     */
-    public function stats(Request $request)
+    public function exportPdf(int $id)
     {
-        $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date');
+        $quote = Quote::findOrFail($id);
 
-        $query = Quote::query();
-
-        if ($startDate && $endDate) {
-            $query->dateRange($startDate, $endDate);
-        }
-
-        $stats = [
-            'total' => $query->count(),
-            'draft' => (clone $query)->byStatus('draft')->count(),
-            'sent' => (clone $query)->byStatus('sent')->count(),
-            'approved' => (clone $query)->byStatus('approved')->count(),
-            'rejected' => (clone $query)->byStatus('rejected')->count(),
-            'total_amount' => $query->sum('total'),
-            'approved_amount' => (clone $query)->byStatus('approved')->sum('total'),
-        ];
-
-        return response()->json(['data' => $stats]);
+        return $this->quoteDocumentService->downloadPdf($quote);
     }
 
-    /**
-     * 將已核准的報價單轉換為訂單。
-     *
-     * @param Request $request
-     * @param int $id 報價單ID
-     * @return \Illuminate\Http\Response
-     */
-    public function convertToOrder(Request $request, $id)
+    public function exportExcel(int $id)
+    {
+        $quote = Quote::findOrFail($id);
+
+        return $this->quoteDocumentService->downloadExcel($quote);
+    }
+
+    public function stats(Request $request)
+    {
+        $query = Quote::query();
+
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            $query->dateRange($request->get('start_date'), $request->get('end_date'));
+        }
+
+        return response()->json([
+            'data' => [
+                'total' => $query->count(),
+                'draft' => (clone $query)->byStatus('draft')->count(),
+                'sent' => (clone $query)->byStatus('sent')->count(),
+                'approved' => (clone $query)->byStatus('approved')->count(),
+                'rejected' => (clone $query)->byStatus('rejected')->count(),
+                'total_amount' => (clone $query)->sum('total'),
+                'approved_amount' => (clone $query)->byStatus('approved')->sum('total'),
+            ],
+        ]);
+    }
+
+    public function convertToOrder(Request $request, int $id)
     {
         $quote = Quote::findOrFail($id);
 
@@ -280,14 +230,44 @@ class QuoteController extends Controller
             $order = $this->quoteService->createOrderFromQuote($quote, auth()->id());
 
             return response()->json([
-                'message' => '報價單已成功轉換為訂單',
+                'message' => '報價單已轉為訂單',
                 'data' => $order,
             ], 201);
-        } catch (\Exception $e) {
+        } catch (Throwable $exception) {
             return response()->json([
-                'message' => '轉換失敗',
-                'error' => $e->getMessage(),
+                'message' => '轉單失敗',
+                'error' => $exception->getMessage(),
             ], 500);
         }
+    }
+
+    private function quoteRules(bool $isUpdate = false): array
+    {
+        $customerNameRule = $isUpdate ? 'sometimes|required|string|max:255' : 'required|string|max:255';
+        $quoteDateRule = $isUpdate ? 'sometimes|required|date' : 'required|date';
+        $itemsRule = $isUpdate ? 'sometimes|required|array|min:1' : 'required|array|min:1';
+        $requiredWithItems = $isUpdate ? 'required_with:items' : 'required';
+
+        return [
+            'customer_id' => 'nullable|exists:customers,id',
+            'customer_name' => $customerNameRule,
+            'contact_phone' => 'nullable|string|max:255',
+            'contact_email' => 'nullable|email|max:255',
+            'project_name' => 'nullable|string|max:255',
+            'quote_date' => $quoteDateRule,
+            'valid_until' => 'nullable|date',
+            'notes' => 'nullable|string',
+            'items' => $itemsRule,
+            'items.*.item_id' => 'nullable|exists:items,id',
+            'items.*.type' => $requiredWithItems . '|in:input,drop,template',
+            'items.*.name' => $requiredWithItems . '|string|max:255',
+            'items.*.description' => 'nullable|string',
+            'items.*.quantity' => $requiredWithItems . '|integer|min:1',
+            'items.*.unit' => $requiredWithItems . '|string|max:50',
+            'items.*.price' => $requiredWithItems . '|numeric|min:0',
+            'items.*.fields' => 'nullable|array',
+            'items.*.notes' => 'nullable|string',
+            'tax_rate' => 'nullable|numeric|min:0|max:1',
+        ];
     }
 }

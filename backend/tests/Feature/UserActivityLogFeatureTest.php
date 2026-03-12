@@ -15,7 +15,7 @@ class UserActivityLogFeatureTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
+        $this->user = $this->createUserWithAccess(['admin']);
     }
 
     public function test_unauthorized_user_cannot_access_users_api(): void

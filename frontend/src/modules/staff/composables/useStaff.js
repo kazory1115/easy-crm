@@ -1,7 +1,3 @@
-/**
- * 員工管理 Composable（API-only）
- */
-
 import { ref, computed } from 'vue'
 import { useAppStore } from '@/stores/app'
 import * as staffApi from '../api/staffApi'
@@ -14,7 +10,7 @@ function getRowsFromResponse(response) {
 }
 
 function getItemFromResponse(response) {
-  if (response?.data?.id) return response.data
+  if (response?.data) return response.data
   return response
 }
 
@@ -25,7 +21,10 @@ function normalizeStaff(staff = {}) {
     ...staff,
     employeeId: staff.employeeId || staff.employee_id || `EMP${serial}`,
     department: staff.department || '',
-    position: staff.position || '-'
+    position: staff.position || '-',
+    roles: Array.isArray(staff.roles) ? staff.roles : [],
+    directPermissions: Array.isArray(staff.direct_permissions) ? staff.direct_permissions : [],
+    permissions: Array.isArray(staff.permissions) ? staff.permissions : []
   }
 }
 
@@ -49,6 +48,11 @@ export function useStaff() {
   const departments = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const accessControlOptions = ref({
+    roles: [],
+    modules: [],
+    permissions: []
+  })
 
   const stats = computed(() => {
     const list = staffList.value
@@ -62,6 +66,9 @@ export function useStaff() {
       }, {})
     }
   })
+
+  const roleOptions = computed(() => accessControlOptions.value.roles || [])
+  const modulePermissionGroups = computed(() => accessControlOptions.value.modules || [])
 
   const fetchStaffList = async (params = {}) => {
     loading.value = true
@@ -106,16 +113,32 @@ export function useStaff() {
     }
   }
 
+  const fetchAccessControlOptions = async () => {
+    try {
+      const response = await staffApi.getPermissionModules()
+      accessControlOptions.value = response?.data || {
+        roles: [],
+        modules: [],
+        permissions: []
+      }
+      return accessControlOptions.value
+    } catch (err) {
+      error.value = err.message || '載入權限設定失敗'
+      appStore.showError(error.value)
+      return accessControlOptions.value
+    }
+  }
+
   const createStaff = async (payload) => {
     loading.value = true
     error.value = null
 
     try {
       const response = await staffApi.createStaff(payload)
-      appStore.showSuccess('員工新增成功')
+      appStore.showSuccess('員工建立成功')
       return normalizeStaff(getItemFromResponse(response))
     } catch (err) {
-      error.value = err.message || '新增員工失敗'
+      error.value = err.message || '建立員工失敗'
       appStore.showError(error.value)
       return null
     } finally {
@@ -164,8 +187,11 @@ export function useStaff() {
     loading,
     error,
     stats,
+    roleOptions,
+    modulePermissionGroups,
     fetchStaffList,
     fetchStaff,
+    fetchAccessControlOptions,
     createStaff,
     updateStaff,
     deleteStaff

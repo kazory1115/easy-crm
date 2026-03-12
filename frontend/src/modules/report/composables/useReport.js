@@ -48,33 +48,30 @@ function normalizeTrendItem(item = {}) {
 }
 
 function normalizeExportRecord(record = {}) {
-  const source = record || {}
-
   return {
-    ...source,
-    id: Number(source.id || 0),
-    report_key: source.report_key || '',
-    format: source.format || 'xlsx',
-    status: source.status || 'queued',
-    filters: source.filters && typeof source.filters === 'object' ? source.filters : null,
-    file_path: source.file_path || '',
-    created_at: source.created_at || null,
-    completed_at: source.completed_at || null,
-    user: source.user || null,
-    user_name: source.user?.name || source.user?.email || '系統'
+    ...record,
+    id: Number(record.id || 0),
+    report_key: record.report_key || '',
+    format: record.format || 'xlsx',
+    status: record.status || 'queued',
+    filters: record.filters && typeof record.filters === 'object' ? record.filters : null,
+    file_path: record.file_path || '',
+    created_at: record.created_at || null,
+    completed_at: record.completed_at || null,
+    user: record.user || null,
+    user_name: record.user?.name || record.user?.email || '系統'
   }
 }
 
 function normalizeDashboard(payload = {}) {
-  const source = payload || {}
-  const quote = source.quote || {}
-  const order = source.order || {}
-  const inventory = source.inventory || {}
-  const exports = source.exports || {}
+  const quote = payload.quote || {}
+  const order = payload.order || {}
+  const inventory = payload.inventory || {}
+  const exports = payload.exports || {}
 
   return {
-    generated_at: source.generated_at || null,
-    filters: source.filters || {
+    generated_at: payload.generated_at || null,
+    filters: payload.filters || {
       start_date: '',
       end_date: '',
       range_days: 30

@@ -1,89 +1,121 @@
-# Easy CRM (MVP)
+# Easy CRM
 
-Easy CRM 是一套以 Vue 3 + Laravel + MySQL 組成的輕量 CRM MVP，前端採模組化設計，後端提供 REST API 與活動紀錄。
+Easy CRM 是一個前後端分離的 CRM 專案。
 
-## MVP 功能
-- 報價管理：報價單 CRUD、狀態流轉（draft/sent/approved/rejected）
-- 報價品項與範本：品項 CRUD、範本 CRUD
-- 員工/帳號：使用者 CRUD、基本統計
-- 活動紀錄查詢
-- 驗證登入：登入/登出、變更密碼（Sanctum）
+- 前端：Vue 3 + Vite + Pinia + Vue Router
+- 後端：Laravel 12 + Sanctum
+- 資料庫：MySQL 8
+- 部署開發：Docker Compose
 
-## 非 MVP / 規劃中
-- 客戶管理（CRM）、庫存、報表模組：前端模組已預留但停用
-- 報價 PDF/Excel 匯出、郵件發送：後端保留 TODO
+這份 `README.md` 的用途是：
 
-## 技術棧
-- Frontend: Vue 3, Vite, Pinia, Vue Router, Axios
-- Backend: Laravel 12, MySQL 8, Sanctum
-- Infra: Nginx, PHP-FPM, Docker Compose
+- 說明專案是什麼
+- 告訴你怎麼把專案跑起來
+- 提供常用開發與測試命令
+- 指出重要目錄與環境限制
 
-## 目錄概覽
-- `frontend/` 前端（modules 架構）
-- `backend/` Laravel API
-- `docker-compose.yml` / `dockerfile` / `nginx.conf`
+進度、已完成任務、下一步規劃不放在這裡，請看：
 
-## 快速啟動（Docker MVP）
+- [PLAN.md](C:\Users\kazo\Desktop\localhostDB\website\easy-crm\PLAN.md)
+- [TASK.md](C:\Users\kazo\Desktop\localhostDB\website\easy-crm\TASK.md)
 
-### 1) 環境變數
-```bash
-cp .env.example .env
-cp backend/.env.example backend/.env
+## 專案內容
+
+目前專案已包含以下模組：
+
+- Auth
+- Quote
+- Staff
+- Order
+- CRM
+- Inventory
+- Report
+
+## 目錄結構
+
+- [frontend](C:\Users\kazo\Desktop\localhostDB\website\easy-crm\frontend)
+  - Vue 3 前端程式
+- [backend](C:\Users\kazo\Desktop\localhostDB\website\easy-crm\backend)
+  - Laravel API
+- [docker-compose.yml](C:\Users\kazo\Desktop\localhostDB\website\easy-crm\docker-compose.yml)
+  - 本機開發容器設定
+- [nginx.conf](C:\Users\kazo\Desktop\localhostDB\website\easy-crm\nginx.conf)
+  - Nginx 設定
+
+## 本機啟動
+
+### 1. 準備環境檔
+
+```powershell
+Copy-Item .env.example .env
+Copy-Item backend\.env.example backend\.env
 ```
 
-請調整 `.env` 與 `backend/.env` 的 DB 密碼與連線設定。
+### 2. 啟動容器
 
-### 2) 啟動服務
-```bash
+```powershell
 docker compose up -d --build
 ```
 
-### 3) Laravel 初始化
-```bash
+### 3. 初始化後端
+
+```powershell
 docker compose exec php php artisan key:generate
 docker compose exec php php artisan migrate
 docker compose exec php php artisan db:seed
 ```
 
-### 4) 前端
-- 開發模式：`cd frontend && npm install && npm run dev`
-- 生產模式：`npm run build`，Nginx 會讀取 `frontend/dist`
+### 4. 啟動前端開發伺服器
 
-### 4.1) 預設登入帳號（Seeder）
-- 管理員：`admin@example.com / password`
-- 測試帳號：`test@example.com / password`
+```powershell
+cd frontend
+npm install
+npm run dev
+```
 
-### 5) 入口
-- API: http://localhost:8180/api/ping
-- 前端開發：http://localhost:5173
-- 前端（Nginx）：http://localhost:8180
+## 常用命令
 
-## API 範圍（MVP）
-- Auth: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`
-- Quotes: `GET /api/quotes`, `POST /api/quotes`, `GET /api/quotes/{id}`, `PUT /api/quotes/{id}`, `DELETE /api/quotes/{id}`
-- Quote Items: `GET /api/quote-items`, `POST /api/quote-items`, `PUT /api/quote-items/{id}`, `DELETE /api/quote-items/{id}`
-- Templates: `GET /api/templates`, `POST /api/templates`, `PUT /api/templates/{id}`, `DELETE /api/templates/{id}`
-- Users: `GET /api/users`, `POST /api/users`, `PUT /api/users/{id}`, `DELETE /api/users/{id}`
-- Activity Logs: `GET /api/activity-logs`, `GET /api/activity-logs/{id}`
+### Frontend
 
-## Root .env 參數
-- `TIMEZONE`
-- `NGINX_PORT`
-- `PHP_MEMORY_LIMIT`
-- `PHP_UPLOAD_MAX_FILESIZE`
-- `PHP_POST_MAX_SIZE`
-- `DB_CONNECTION`
-- `DB_HOST`
-- `DB_PORT`
-- `DB_DATABASE`
-- `DB_USERNAME`
-- `DB_PASSWORD`
-- `DB_ROOT_PASSWORD`
-- `DB_EXTERNAL_PORT`
+```powershell
+cd frontend
+npm.cmd run build
+npm.cmd run test:run
+npm.cmd run check
+npm.cmd run format:check
+```
 
-## 開發備註
-- 報價模組已統一走 API：`frontend/src/modules/quote/composables/useQuote.js`
-- 員工模組為 API-only：`frontend/src/modules/staff/composables/useStaff.js`
-- 報價匯出現況：
-  - 前端已支援 Word 匯出 / 列印
-  - 後端 PDF/Excel 匯出與寄信（`QuoteController@send`）仍為待完成項目
+### Backend
+
+```powershell
+cd backend
+php artisan serve
+php artisan test
+```
+
+## 主要環境限制
+
+### Backend tests
+
+目前 backend Feature tests 依賴 sqlite testing connection。
+
+如果本機 PHP 沒有啟用 `pdo_sqlite`，以下命令會失敗：
+
+```powershell
+cd backend
+php artisan test
+```
+
+這是測試環境問題，不是功能模組本身一定有錯。
+
+## 開發原則
+
+- Controller 盡量保持薄
+- 商業流程收斂到 Service
+- 前端模組走 `modules/*` 結構
+- 新功能完成後同步更新 `TASK.md`
+
+## 補充
+
+- 專案進度看 [PLAN.md](C:\Users\kazo\Desktop\localhostDB\website\easy-crm\PLAN.md)
+- 任務細節看 [TASK.md](C:\Users\kazo\Desktop\localhostDB\website\easy-crm\TASK.md)

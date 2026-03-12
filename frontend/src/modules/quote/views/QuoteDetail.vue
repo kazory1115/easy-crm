@@ -1,347 +1,348 @@
-<style scoped>
-table {
-  font-size: 0.9em;
-}
-.alignCenter {
-  text-align: center;
-}
-</style>
-
 <template>
-  <div class="max-w-7xl mx-auto mt-10">
-    <!-- Header -->
-    <div class="mb-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-3xl font-bold text-gray-800">報價單詳情</h2>
-          <p class="text-gray-600 mt-2">查看完整報價單資訊</p>
-        </div>
-        <div class="flex gap-2">
-          <button
-            v-if="currentQuote && canConvertToOrder"
-            @click="handleConvertToOrder"
-            :disabled="isConverting"
-            class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <i class="fa-solid fa-file-invoice mr-2"></i>
-            {{ isConverting ? '轉單中...' : '轉為訂單' }}
-          </button>
-          <button
-            v-if="currentQuote"
-            @click="printQuote"
-            class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            <i class="fa-solid fa-print mr-2"></i>
-            列印
-          </button>
-          <button
-            v-if="currentQuote"
-            @click="editQuote"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <i class="fa-solid fa-edit mr-2"></i>
-            編輯
-          </button>
-          <button
-            @click="goBack"
-            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-          >
-            <i class="fa-solid fa-arrow-left mr-2"></i>
-            返回
-          </button>
-        </div>
+  <div class="mx-auto mt-10 max-w-7xl space-y-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800">報價單明細</h1>
+        <p class="mt-2 text-sm text-gray-500">正式輸出與寄信都集中在這一頁，不再把 print / Word 當主要流程。</p>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-if="currentQuote && canConvertToOrder"
+          :disabled="isConverting"
+          class="rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+          @click="handleConvertToOrder"
+        >
+          {{ isConverting ? '轉單中...' : '轉為訂單' }}
+        </button>
+        <button
+          v-if="currentQuote"
+          class="rounded-lg bg-slate-700 px-4 py-2 text-white hover:bg-slate-800"
+          @click="handleDownloadPdf"
+        >
+          下載 PDF
+        </button>
+        <button
+          v-if="currentQuote"
+          class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          @click="handleDownloadExcel"
+        >
+          下載 Excel
+        </button>
+        <button
+          v-if="currentQuote"
+          class="rounded-lg bg-amber-500 px-4 py-2 text-white hover:bg-amber-600"
+          @click="openSendDialog"
+        >
+          寄送 Email
+        </button>
+        <button
+          v-if="currentQuote"
+          class="rounded-lg bg-white px-4 py-2 text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+          @click="editQuote"
+        >
+          編輯
+        </button>
+        <button
+          class="rounded-lg bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+          @click="goBack"
+        >
+          返回
+        </button>
       </div>
     </div>
 
-    <!-- Loading -->
     <LoadingPanel v-if="loading" variant="skeleton" />
 
-    <!-- Content -->
-    <div v-else-if="currentQuote" class="app-card p-8" id="quote-detail-print">
-      <!-- 基本資訊區塊 -->
-      <div class="text-center mb-8">
-        <h2 class="text-4xl font-bold mb-2 tracking-tight text-gray-800">報價單</h2>
-        <div class="w-24 h-1 bg-blue-500 mx-auto rounded-full"></div>
+    <div v-else-if="currentQuote" class="app-card p-8">
+      <div class="mb-8 grid gap-6 md:grid-cols-2">
+        <section class="rounded-xl bg-gray-50 p-6">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">客戶資訊</h2>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between gap-4">
+              <dt class="text-gray-500">客戶名稱</dt>
+              <dd class="font-medium text-gray-800">{{ currentQuote.customer_name }}</dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-gray-500">聯絡電話</dt>
+              <dd class="text-gray-800">{{ currentQuote.contact_phone || '-' }}</dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-gray-500">聯絡信箱</dt>
+              <dd class="text-gray-800">{{ currentQuote.contact_email || '-' }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="rounded-xl bg-gray-50 p-6">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">報價資訊</h2>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between gap-4">
+              <dt class="text-gray-500">報價單號</dt>
+              <dd class="font-medium text-gray-800">{{ currentQuote.quote_number }}</dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-gray-500">報價日期</dt>
+              <dd class="text-gray-800">{{ formatDate(currentQuote.quote_date) }}</dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-gray-500">有效期限</dt>
+              <dd class="text-gray-800">{{ formatDate(currentQuote.valid_until) }}</dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-gray-500">狀態</dt>
+              <dd class="font-medium" :class="getStatusClass(currentQuote.status)">{{ getStatusLabel(currentQuote.status) }}</dd>
+            </div>
+          </dl>
+        </section>
       </div>
 
-      <!-- 客戶與報價資訊 -->
-      <div class="grid md:grid-cols-2 gap-6 mb-8">
-        <div class="bg-gray-50 p-6 rounded-lg">
-          <h4 class="font-semibold text-gray-700 mb-4 text-lg border-b pb-2">
-            <i class="fa-solid fa-user mr-2 text-blue-600"></i>
-            客戶資訊
-          </h4>
-          <div class="space-y-3">
-            <div class="flex">
-              <span class="text-gray-600 w-24">客戶名稱:</span>
-              <span class="font-semibold text-gray-800">{{ currentQuote.customer_name || currentQuote.customerName }}</span>
-            </div>
-            <div v-if="currentQuote.contact_phone || currentQuote.contactPhone" class="flex">
-              <span class="text-gray-600 w-24">聯絡電話:</span>
-              <span class="font-semibold text-gray-800">{{ currentQuote.contact_phone || currentQuote.contactPhone }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-gray-50 p-6 rounded-lg">
-          <h4 class="font-semibold text-gray-700 mb-4 text-lg border-b pb-2">
-            <i class="fa-solid fa-file-invoice mr-2 text-blue-600"></i>
-            報價資訊
-          </h4>
-          <div class="space-y-3">
-            <div v-if="currentQuote.quote_number || currentQuote.quotationNumber" class="flex">
-              <span class="text-gray-600 w-24">報價單號:</span>
-              <span class="font-semibold text-gray-800">{{ currentQuote.quote_number || currentQuote.quotationNumber }}</span>
-            </div>
-            <div class="flex">
-              <span class="text-gray-600 w-24">報價日期:</span>
-              <span class="font-semibold text-gray-800">{{ formatDate(currentQuote.quote_date || currentQuote.date) }}</span>
-            </div>
-            <div v-if="currentQuote.status" class="flex">
-              <span class="text-gray-600 w-24">狀態:</span>
-              <span class="font-semibold" :class="getStatusClass(currentQuote.status)">
-                {{ getStatusText(currentQuote.status) }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 項目表格 -->
-      <div class="mb-8">
-        <h4 class="font-semibold text-gray-700 mb-4 text-lg">
-          <i class="fa-solid fa-list mr-2 text-blue-600"></i>
-          報價項目
-        </h4>
-        <div class="overflow-x-auto rounded-lg border border-gray-200">
-          <table class="w-full min-w-[900px] text-sm">
-            <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+      <section>
+        <h2 class="mb-4 text-lg font-semibold text-gray-800">品項明細</h2>
+        <div class="overflow-x-auto rounded-xl border border-gray-200">
+          <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
               <tr>
-                <th class="py-3 px-4 text-center font-medium text-gray-700 w-16">項次</th>
-                <th class="py-3 px-4 text-center font-medium text-gray-700">品名規格</th>
-                <th class="py-3 px-4 text-center font-medium text-gray-700 w-24">數量</th>
-                <th class="py-3 px-4 text-center font-medium text-gray-700 w-24">單位</th>
-                <th class="py-3 px-4 text-center font-medium text-gray-700 w-32">單價</th>
-                <th class="py-3 px-4 text-center font-medium text-gray-700 w-32">複價</th>
+                <th class="px-4 py-3 text-left font-medium text-gray-500">#</th>
+                <th class="px-4 py-3 text-left font-medium text-gray-500">品項</th>
+                <th class="px-4 py-3 text-left font-medium text-gray-500">描述</th>
+                <th class="px-4 py-3 text-right font-medium text-gray-500">數量</th>
+                <th class="px-4 py-3 text-left font-medium text-gray-500">單位</th>
+                <th class="px-4 py-3 text-right font-medium text-gray-500">單價</th>
+                <th class="px-4 py-3 text-right font-medium text-gray-500">小計</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 bg-white">
-              <tr
-                v-for="(item, index) in quoteItems"
-                :key="index"
-                class="hover:bg-gray-50 transition-colors"
-              >
-                <td class="px-4 py-3 text-center text-gray-600 font-semibold">{{ index + 1 }}</td>
-                <td class="px-4 py-3 text-gray-800">
-                  <div>
-                    {{ getItemName(item.name) }}
-                  </div>
-                  <!-- 如果是模板項目，顯示詳細規格 -->
-                  <div v-if="item.fields && item.fields.length > 0" class="mt-2 text-xs text-gray-600">
-                    <div v-for="field in item.fields" :key="field.id" class="ml-4">
-                      {{ field.label }}: {{ field.value }}
-                    </div>
-                  </div>
-                </td>
-                <td class="px-4 py-3 text-center text-gray-600">{{ item.quantity }}</td>
-                <td class="px-4 py-3 text-center text-gray-600">{{ item.unit }}</td>
-                <td class="px-4 py-3 text-right text-gray-600">{{ item.price.toLocaleString() }}</td>
-                <td class="px-4 py-3 text-right text-gray-700 font-semibold">
-                  {{ (item.quantity * item.price).toLocaleString() }}
-                </td>
+              <tr v-for="(item, index) in quoteItems" :key="item.id || index">
+                <td class="px-4 py-3 text-gray-700">{{ index + 1 }}</td>
+                <td class="px-4 py-3 font-medium text-gray-800">{{ stripHtml(item.name) }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ item.description || '-' }}</td>
+                <td class="px-4 py-3 text-right text-gray-700">{{ item.quantity }}</td>
+                <td class="px-4 py-3 text-gray-700">{{ item.unit }}</td>
+                <td class="px-4 py-3 text-right text-gray-700">{{ formatCurrency(item.price) }}</td>
+                <td class="px-4 py-3 text-right font-medium text-gray-800">{{ formatCurrency(item.amount || (item.quantity * item.price)) }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
-      <!-- 總金額 -->
-      <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg mb-8">
-        <div class="flex justify-between items-center">
-          <span class="text-lg font-semibold text-gray-800">總金額：</span>
-          <span class="text-3xl font-bold text-blue-600">
-            {{ Number(currentQuote.total || 0).toLocaleString() }} 元
-          </span>
+      <section class="mt-6 grid gap-6 lg:grid-cols-[1fr,320px]">
+        <div class="rounded-xl bg-gray-50 p-6">
+          <h2 class="mb-3 text-lg font-semibold text-gray-800">備註</h2>
+          <p class="whitespace-pre-wrap text-sm text-gray-600">{{ currentQuote.notes || '-' }}</p>
         </div>
-      </div>
 
-      <!-- 備註 -->
-      <div v-if="currentQuote.notes" class="bg-gray-50 p-6 rounded-lg mb-8">
-        <h4 class="font-semibold text-gray-700 mb-3">
-          <i class="fa-solid fa-note-sticky mr-2 text-blue-600"></i>
-          備註
-        </h4>
-        <p class="text-gray-600 whitespace-pre-wrap">{{ currentQuote.notes }}</p>
-      </div>
-
-      <!-- 時間資訊 -->
-      <div class="text-sm text-gray-500 border-t pt-4">
-        <div class="flex justify-between">
-          <span>建立時間：{{ formatDateTime(currentQuote.created_at || currentQuote.createdAt) }}</span>
-          <span v-if="(currentQuote.updated_at || currentQuote.updatedAt) !== (currentQuote.created_at || currentQuote.createdAt)">
-            更新時間：{{ formatDateTime(currentQuote.updated_at || currentQuote.updatedAt) }}
-          </span>
+        <div class="rounded-xl bg-gradient-to-br from-blue-50 to-slate-100 p-6">
+          <h2 class="mb-4 text-lg font-semibold text-gray-800">金額摘要</h2>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-gray-500">小計</dt>
+              <dd class="text-gray-800">{{ formatCurrency(currentQuote.subtotal) }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-gray-500">稅額</dt>
+              <dd class="text-gray-800">{{ formatCurrency(currentQuote.tax) }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-gray-500">折扣</dt>
+              <dd class="text-gray-800">{{ formatCurrency(currentQuote.discount) }}</dd>
+            </div>
+            <div class="flex justify-between border-t border-slate-200 pt-3 text-base font-semibold">
+              <dt class="text-gray-800">總計</dt>
+              <dd class="text-blue-700">{{ formatCurrency(currentQuote.total) }}</dd>
+            </div>
+          </dl>
         </div>
-      </div>
+      </section>
     </div>
 
-    <!-- Error State -->
     <div v-else class="app-card empty-state">
-      <i class="fa-solid fa-exclamation-triangle text-6xl text-red-600 mb-4"></i>
-      <h3 class="text-2xl font-bold text-gray-800 mb-2">載入失敗</h3>
-      <p class="text-gray-600 mb-6">無法載入報價單資料，請稍後再試</p>
-      <button
-        @click="goToList"
-        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        <i class="fa-solid fa-list mr-2"></i>
+      <i class="fa-solid fa-circle-exclamation mb-4 text-6xl text-red-400"></i>
+      <h3 class="mb-2 text-xl font-semibold text-gray-700">找不到報價單</h3>
+      <button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700" @click="goToList">
         返回列表
       </button>
+    </div>
+
+    <div
+      v-if="showSendDialog"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      @click.self="closeSendDialog"
+    >
+      <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+        <div class="mb-4 flex items-start justify-between">
+          <div>
+            <h2 class="text-xl font-semibold text-gray-800">寄送報價單</h2>
+            <p class="mt-1 text-sm text-gray-500">會附上 PDF 報價單。</p>
+          </div>
+          <button class="text-gray-400 hover:text-gray-600" @click="closeSendDialog">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">收件人 Email</label>
+            <input v-model.trim="sendForm.email" type="email" class="w-full rounded-lg border px-4 py-2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">主旨</label>
+            <input v-model.trim="sendForm.subject" type="text" class="w-full rounded-lg border px-4 py-2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">訊息</label>
+            <textarea v-model="sendForm.message" rows="5" class="w-full rounded-lg border px-4 py-2"></textarea>
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-end gap-2">
+          <button class="rounded-lg border px-4 py-2 hover:bg-gray-50" @click="closeSendDialog">取消</button>
+          <button
+            class="rounded-lg bg-amber-500 px-4 py-2 text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="submitting"
+            @click="handleSendQuote"
+          >
+            {{ submitting ? '寄送中...' : '送出' }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
-import LoadingPanel from '@/components/LoadingPanel.vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useQuote } from '../composables/useQuote';
-import { useOrder } from '@/modules/order/composables/useOrder';
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import LoadingPanel from '@/components/LoadingPanel.vue'
+import { useQuote } from '../composables/useQuote'
+import { useOrder } from '@/modules/order/composables/useOrder'
 
-const route = useRoute();
-const router = useRouter();
+const route = useRoute()
+const router = useRouter()
 
-const { currentQuote, loading, error, fetchQuote } = useQuote();
-const { convertQuoteToOrder, submitting: orderSubmitting } = useOrder();
+const { currentQuote, loading, submitting, fetchQuote, sendQuote, downloadQuotePdf, downloadQuoteExcel } = useQuote()
+const { convertQuoteToOrder, submitting: orderSubmitting } = useOrder()
 
-const quoteId = computed(() => route.params.id);
-const quoteItems = computed(() => currentQuote.value?.items || []);
-const canConvertToOrder = computed(() => currentQuote.value?.status === 'approved');
-const isConverting = computed(() => orderSubmitting.value);
+const quoteId = computed(() => Number(route.params.id))
+const quoteItems = computed(() => currentQuote.value?.items || [])
+const canConvertToOrder = computed(() => currentQuote.value?.status === 'approved')
+const isConverting = computed(() => orderSubmitting.value)
+const showSendDialog = ref(false)
+const sendForm = reactive({
+  email: '',
+  subject: '',
+  message: ''
+})
 
-// 載入報價單
-onMounted(async () => {
-  try {
-    await fetchQuote(Number(quoteId.value));
-  } catch (err) {
-    console.error('載入報價單失敗:', err);
-  }
-});
+async function loadQuote() {
+  await fetchQuote(quoteId.value)
+}
 
-// 格式化日期
-function formatDate(dateString) {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('zh-TW', {
+function formatDate(value) {
+  if (!value) return '-'
+
+  return new Date(value).toLocaleDateString('zh-TW', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit',
-  });
+    day: '2-digit'
+  })
 }
 
-// 格式化日期時間
-function formatDateTime(dateString) {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleString('zh-TW', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+function formatCurrency(value) {
+  return `NT$ ${Number(value || 0).toLocaleString()}`
 }
 
-// 取得項目名稱（處理 HTML）
-function getItemName(name) {
-  if (!name) return '';
-  // 如果包含 HTML 標籤，移除它們
-  const div = document.createElement('div');
-  div.innerHTML = name;
-  return div.textContent || div.innerText || name;
+function stripHtml(value) {
+  const div = document.createElement('div')
+  div.innerHTML = value || ''
+  return div.textContent || div.innerText || ''
 }
 
-// 取得狀態文字
-function getStatusText(status) {
-  const statusMap = {
+function getStatusLabel(status) {
+  const map = {
     draft: '草稿',
-    sent: '已發送',
+    sent: '已送出',
     approved: '已核准',
     rejected: '已拒絕',
-  };
-  return statusMap[status] || status;
+    expired: '已過期'
+  }
+
+  return map[status] || status || '-'
 }
 
-// 取得狀態樣式
 function getStatusClass(status) {
-  const classMap = {
-    draft: 'text-gray-600',
+  const map = {
+    draft: 'text-slate-600',
     sent: 'text-blue-600',
-    approved: 'text-green-600',
-    rejected: 'text-red-600',
-  };
-  return classMap[status] || 'text-gray-600';
+    approved: 'text-emerald-600',
+    rejected: 'text-rose-600',
+    expired: 'text-amber-600'
+  }
+
+  return map[status] || 'text-slate-600'
 }
 
-// 編輯報價單
-function editQuote() {
-  router.push(`/quote/edit/${quoteId.value}`);
+async function handleDownloadPdf() {
+  if (!currentQuote.value) return
+  await downloadQuotePdf(currentQuote.value.id, `${currentQuote.value.quote_number || `quote_${currentQuote.value.id}`}.pdf`)
+}
+
+async function handleDownloadExcel() {
+  if (!currentQuote.value) return
+  await downloadQuoteExcel(currentQuote.value.id, `${currentQuote.value.quote_number || `quote_${currentQuote.value.id}`}.xlsx`)
+}
+
+function openSendDialog() {
+  if (!currentQuote.value) return
+  sendForm.email = currentQuote.value.contact_email || ''
+  sendForm.subject = `報價單 ${currentQuote.value.quote_number || ''}`.trim()
+  sendForm.message = ''
+  showSendDialog.value = true
+}
+
+function closeSendDialog() {
+  showSendDialog.value = false
+}
+
+async function handleSendQuote() {
+  if (!currentQuote.value) return
+
+  const updatedQuote = await sendQuote(currentQuote.value.id, {
+    email: sendForm.email,
+    subject: sendForm.subject,
+    message: sendForm.message
+  })
+
+  if (updatedQuote) {
+    currentQuote.value = updatedQuote
+    closeSendDialog()
+  }
 }
 
 async function handleConvertToOrder() {
-  if (!canConvertToOrder.value || !currentQuote.value?.id) {
-    return;
-  }
+  if (!currentQuote.value?.id) return
 
-  const confirmed = window.confirm('確定要將此報價單轉為訂單嗎？');
-  if (!confirmed) {
-    return;
-  }
+  const confirmed = window.confirm('確定要把這張報價單轉成訂單？')
+  if (!confirmed) return
 
-  const order = await convertQuoteToOrder(Number(currentQuote.value.id));
-  if (!order?.id) {
-    return;
+  const order = await convertQuoteToOrder(currentQuote.value.id)
+  if (order?.id) {
+    router.push(`/order/detail/${order.id}`)
   }
-
-  router.push(`/order/detail/${order.id}`);
 }
 
-// 返回
+function editQuote() {
+  router.push(`/quote/edit/${quoteId.value}`)
+}
+
 function goBack() {
-  router.back();
+  router.back()
 }
 
-// 返回列表
 function goToList() {
-  router.push('/quote/list');
+  router.push('/quote/list')
 }
 
-// 列印
-function printQuote() {
-  window.print();
-}
+onMounted(loadQuote)
 </script>
-
-<style>
-/* 列印樣式 */
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  #quote-detail-print,
-  #quote-detail-print * {
-    visibility: visible;
-  }
-  #quote-detail-print {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-
-  /* 隱藏按鈕 */
-  button {
-    display: none !important;
-  }
-}
-</style>

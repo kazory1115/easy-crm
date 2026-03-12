@@ -4,19 +4,21 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\UserPermissionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    /**
-     * 取得用戶列表 (員工列表)
-     */
+    public function __construct(private readonly UserPermissionService $userPermissionService)
+    {
+    }
+
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::query()->with(['roles', 'permissions']);
 
-        // 搜尋
         if ($request->has('search')) {
             $keyword = $request->search;
             $query->where(function ($q) use ($keyword) {
@@ -25,102 +27,108 @@ class UserController extends Controller
             });
         }
 
-        // 排序
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
         $query->orderBy($sortBy, $sortOrder);
 
-        // 分頁
-        $perPage = $request->get('per_page', 15);
+        $perPage = (int) $request->get('per_page', 15);
 
-        if ($request->get('paginate', true)) {
+        if ($request->boolean('paginate', true)) {
             $users = $query->paginate($perPage);
-        } else {
-            $users = $query->get();
+            $users->setCollection(
+                $users->getCollection()->map(fn (User $user) => $this->userPermissionService->serializeUser($user))
+            );
+
+            return response()->json($users);
         }
 
-        return response()->json($users);
+        return response()->json([
+            'data' => $query->get()->map(
+                fn (User $user) => $this->userPermissionService->serializeUser($user)
+            ),
+        ]);
     }
 
-    /**
-     * 取得單一用戶
-     */
     public function show($id)
     {
-        $user = User::findOrFail($id);
-        return response()->json(['data' => $user]);
+        $user = User::with(['roles', 'permissions'])->findOrFail($id);
+
+        return response()->json([
+            'data' => $this->userPermissionService->serializeUser($user),
+        ]);
     }
 
-    /**
-     * 建立用戶 (新增員工)
-     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
-            'phone' => 'nullable|string|max:20',
-            'department' => 'nullable|string|max:100',
-            'position' => 'nullable|string|max:100',
-        ]);
+        $validated = $this->validatePayload($request, null, true);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'phone' => $validated['phone'] ?? null,
-            'department' => $validated['department'] ?? null,
-            'position' => $validated['position'] ?? null,
-        ]);
+        $user = DB::transaction(function () use ($validated) {
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'phone' => $validated['phone'] ?? null,
+                'department' => $validated['department'] ?? null,
+                'position' => $validated['position'] ?? null,
+            ]);
+
+            $roles = $validated['roles'] ?? ['staff'];
+            $directPermissions = $validated['direct_permissions'] ?? [];
+
+            $this->userPermissionService->syncRoles($user, $roles);
+            $this->userPermissionService->syncDirectPermissions($user, $directPermissions);
+
+            return $user->fresh(['roles', 'permissions']);
+        });
 
         return response()->json([
             'message' => '員工建立成功',
-            'data' => $user,
+            'data' => $this->userPermissionService->serializeUser($user),
         ], 201);
     }
 
-    /**
-     * 更新用戶
-     */
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
+        $validated = $this->validatePayload($request, $id, false);
 
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,' . $id,
-            'password' => 'nullable|string|min:8',
-            'phone' => 'nullable|string|max:20',
-            'department' => 'nullable|string|max:100',
-            'position' => 'nullable|string|max:100',
-        ]);
+        $user = DB::transaction(function () use ($user, $validated) {
+            $payload = collect($validated)
+                ->only(['name', 'email', 'phone', 'department', 'position'])
+                ->toArray();
 
-        if (isset($validated['password'])) {
-            $validated['password'] = Hash::make($validated['password']);
-        } else {
-            unset($validated['password']);
-        }
+            if (!empty($validated['password'])) {
+                $payload['password'] = Hash::make($validated['password']);
+            }
 
-        $user->update($validated);
+            $user->update($payload);
+
+            if (array_key_exists('roles', $validated)) {
+                $this->guardSelfRoleMutation($user, $validated['roles']);
+                $this->userPermissionService->syncRoles($user, $validated['roles']);
+            }
+
+            if (array_key_exists('direct_permissions', $validated)) {
+                $this->guardSelfPermissionMutation($user, $validated['direct_permissions']);
+                $this->userPermissionService->syncDirectPermissions($user, $validated['direct_permissions']);
+            }
+
+            return $user->fresh(['roles', 'permissions']);
+        });
 
         return response()->json([
             'message' => '員工資料更新成功',
-            'data' => $user,
+            'data' => $this->userPermissionService->serializeUser($user),
         ]);
     }
 
-    /**
-     * 刪除用戶
-     */
     public function destroy($id)
     {
         $user = User::findOrFail($id);
 
-        // 防止刪除自己
         if ($user->id === auth()->id()) {
             return response()->json([
-                'message' => '無法刪除自己的帳號',
+                'message' => '不可刪除自己的帳號',
             ], 403);
         }
 
@@ -131,9 +139,70 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * 取得當前登入用戶的統計資料
-     */
+    public function roles($id)
+    {
+        $user = User::with('roles')->findOrFail($id);
+
+        return response()->json([
+            'data' => [
+                'roles' => $user->getRoleNames()->values()->all(),
+            ],
+        ]);
+    }
+
+    public function updateRoles(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $validated = $request->validate([
+            'roles' => 'required|array',
+            'roles.*' => 'string',
+        ]);
+
+        $this->guardSelfRoleMutation($user, $validated['roles']);
+        $this->userPermissionService->syncRoles($user, $validated['roles']);
+
+        return response()->json([
+            'message' => '角色更新成功',
+            'data' => [
+                'roles' => $user->fresh()->getRoleNames()->values()->all(),
+            ],
+        ]);
+    }
+
+    public function permissions($id)
+    {
+        $user = User::with('permissions')->findOrFail($id);
+
+        return response()->json([
+            'data' => [
+                'direct_permissions' => $user->permissions->pluck('name')->values()->all(),
+                'permissions' => $user->getAllPermissions()->pluck('name')->values()->all(),
+            ],
+        ]);
+    }
+
+    public function updatePermissions(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $validated = $request->validate([
+            'direct_permissions' => 'required|array',
+            'direct_permissions.*' => 'string',
+        ]);
+
+        $this->guardSelfPermissionMutation($user, $validated['direct_permissions']);
+        $this->userPermissionService->syncDirectPermissions($user, $validated['direct_permissions']);
+
+        $user->refresh();
+
+        return response()->json([
+            'message' => '權限更新成功',
+            'data' => [
+                'direct_permissions' => $user->permissions->pluck('name')->values()->all(),
+                'permissions' => $user->getAllPermissions()->pluck('name')->values()->all(),
+            ],
+        ]);
+    }
+
     public function stats()
     {
         $userId = auth()->id();
@@ -148,5 +217,45 @@ class UserController extends Controller
         ];
 
         return response()->json(['data' => $stats]);
+    }
+
+    private function validatePayload(Request $request, ?int $userId, bool $isCreate): array
+    {
+        $passwordRules = $isCreate ? 'required|string|min:8' : 'nullable|string|min:8';
+
+        return $request->validate([
+            'name' => ($isCreate ? 'required' : 'sometimes|required') . '|string|max:255',
+            'email' => ($isCreate ? 'required' : 'sometimes|required') . '|email|unique:users,email,' . ($userId ?? 'NULL'),
+            'password' => $passwordRules,
+            'phone' => 'nullable|string|max:20',
+            'department' => 'nullable|string|max:100',
+            'position' => 'nullable|string|max:100',
+            'roles' => 'sometimes|array',
+            'roles.*' => 'string',
+            'direct_permissions' => 'sometimes|array',
+            'direct_permissions.*' => 'string',
+        ]);
+    }
+
+    private function guardSelfRoleMutation(User $targetUser, array $roles): void
+    {
+        if ($targetUser->id !== auth()->id()) {
+            return;
+        }
+
+        if (!in_array('admin', $roles, true) && !in_array('super-admin', $roles, true)) {
+            abort(422, '不可移除自己最後的管理角色');
+        }
+    }
+
+    private function guardSelfPermissionMutation(User $targetUser, array $permissions): void
+    {
+        if ($targetUser->id !== auth()->id()) {
+            return;
+        }
+
+        if (!in_array('role.manage', $permissions, true) && !$targetUser->hasRole(['admin', 'super-admin'])) {
+            abort(422, '不可移除自己最後的權限管理能力');
+        }
     }
 }

@@ -1,10 +1,10 @@
 <template>
-  <div class="report-dashboard space-y-6">
+  <div class="space-y-6">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-800">報表中心</h1>
         <p class="mt-1 text-sm text-gray-500">
-          第一版 dashboard，聚合報價、訂單、庫存與匯出任務摘要。
+          先把 Quote、Order、Inventory 的核心數字集中到同一頁，MVP 階段先解決管理層快速看數據的需求。
         </p>
       </div>
 
@@ -41,15 +41,15 @@
     <template v-else>
       <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-          <div class="text-sm text-slate-500">報價單總數</div>
+          <div class="text-sm text-slate-500">報價總數</div>
           <div class="mt-2 text-3xl font-bold text-slate-900">{{ dashboard.quote.summary.total }}</div>
           <div class="mt-3 text-sm text-slate-600">
-            核准 {{ dashboard.quote.summary.approved }} 張，核准率 {{ formatPercent(dashboard.quote.summary.approval_rate) }}
+            已核准 {{ dashboard.quote.summary.approved }} 筆，核准率 {{ formatPercent(dashboard.quote.summary.approval_rate) }}
           </div>
         </article>
 
         <article class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-          <div class="text-sm text-emerald-700">訂單總金額</div>
+          <div class="text-sm text-emerald-700">訂單總額</div>
           <div class="mt-2 text-3xl font-bold text-emerald-900">{{ formatCurrency(dashboard.order.summary.total_amount) }}</div>
           <div class="mt-3 text-sm text-emerald-700">
             已收款 {{ formatCurrency(dashboard.order.summary.paid_amount) }}，完成率 {{ formatPercent(dashboard.order.summary.completion_rate) }}
@@ -62,7 +62,7 @@
             {{ dashboard.inventory.summary.low_stock_count }} / {{ dashboard.inventory.summary.out_of_stock_count }}
           </div>
           <div class="mt-3 text-sm text-amber-700">
-            追蹤品項 {{ dashboard.inventory.summary.tracked_items }}，總庫存 {{ dashboard.inventory.summary.total_units }}
+            追蹤品項 {{ dashboard.inventory.summary.tracked_items }}，現有庫存 {{ dashboard.inventory.summary.total_units }}
           </div>
         </article>
 
@@ -70,7 +70,7 @@
           <div class="text-sm text-rose-700">匯出任務</div>
           <div class="mt-2 text-3xl font-bold text-rose-900">{{ dashboard.exports.summary.total }}</div>
           <div class="mt-3 text-sm text-rose-700">
-            等待中 {{ dashboard.exports.summary.queued }}，失敗 {{ dashboard.exports.summary.failed }}
+            排隊中 {{ dashboard.exports.summary.queued }}，失敗 {{ dashboard.exports.summary.failed }}
           </div>
         </article>
       </div>
@@ -79,8 +79,8 @@
         <section class="app-card p-5">
           <div class="mb-4 flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-gray-800">報價摘要</h2>
-              <p class="text-sm text-gray-500">區間 {{ dashboard.filters.start_date }} 至 {{ dashboard.filters.end_date }}</p>
+              <h2 class="text-lg font-semibold text-gray-800">報價概況</h2>
+              <p class="text-sm text-gray-500">{{ dashboard.filters.start_date }} 到 {{ dashboard.filters.end_date }}</p>
             </div>
             <div class="text-sm text-gray-500">核准金額 {{ formatCurrency(dashboard.quote.summary.approved_amount) }}</div>
           </div>
@@ -106,7 +106,7 @@
                 <thead class="bg-gray-50">
                   <tr>
                     <th class="px-4 py-3 text-left font-medium text-gray-500">日期</th>
-                    <th class="px-4 py-3 text-right font-medium text-gray-500">張數</th>
+                    <th class="px-4 py-3 text-right font-medium text-gray-500">筆數</th>
                     <th class="px-4 py-3 text-right font-medium text-gray-500">金額</th>
                   </tr>
                 </thead>
@@ -125,10 +125,10 @@
         <section class="app-card p-5">
           <div class="mb-4 flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-gray-800">訂單摘要</h2>
-              <p class="text-sm text-gray-500">已完成 {{ dashboard.order.summary.completed }} 張，未付款 {{ dashboard.order.summary.unpaid }} 張</p>
+              <h2 class="text-lg font-semibold text-gray-800">訂單概況</h2>
+              <p class="text-sm text-gray-500">已完成 {{ dashboard.order.summary.completed }} 筆，未收款 {{ dashboard.order.summary.unpaid }} 筆</p>
             </div>
-            <div class="text-sm text-gray-500">總訂單 {{ dashboard.order.summary.total }} 張</div>
+            <div class="text-sm text-gray-500">訂單總數 {{ dashboard.order.summary.total }} 筆</div>
           </div>
 
           <div class="grid gap-3 sm:grid-cols-3">
@@ -152,7 +152,7 @@
                 <thead class="bg-gray-50">
                   <tr>
                     <th class="px-4 py-3 text-left font-medium text-gray-500">日期</th>
-                    <th class="px-4 py-3 text-right font-medium text-gray-500">張數</th>
+                    <th class="px-4 py-3 text-right font-medium text-gray-500">筆數</th>
                     <th class="px-4 py-3 text-right font-medium text-gray-500">金額</th>
                   </tr>
                 </thead>
@@ -173,7 +173,7 @@
         <section class="app-card p-5">
           <div class="mb-4 flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-gray-800">庫存風險</h2>
+              <h2 class="text-lg font-semibold text-gray-800">庫存摘要</h2>
               <p class="text-sm text-gray-500">
                 倉庫 {{ dashboard.inventory.summary.warehouses }} 個，異動 {{ dashboard.inventory.summary.movement_count }} 筆
               </p>
@@ -187,17 +187,17 @@
               <div class="mt-2 text-2xl font-semibold text-slate-800">{{ dashboard.inventory.summary.total_units }}</div>
             </div>
             <div class="rounded-xl border border-slate-200 bg-white px-4 py-3">
-              <div class="text-xs uppercase tracking-wide text-slate-400">保留庫存</div>
+              <div class="text-xs uppercase tracking-wide text-slate-400">已保留</div>
               <div class="mt-2 text-2xl font-semibold text-slate-800">{{ dashboard.inventory.summary.total_reserved }}</div>
             </div>
             <div class="rounded-xl border border-slate-200 bg-white px-4 py-3">
-              <div class="text-xs uppercase tracking-wide text-slate-400">庫存筆數</div>
+              <div class="text-xs uppercase tracking-wide text-slate-400">庫存層級</div>
               <div class="mt-2 text-2xl font-semibold text-slate-800">{{ dashboard.inventory.summary.stock_levels }}</div>
             </div>
           </div>
 
           <div class="mt-5">
-            <div class="mb-2 text-sm font-medium text-gray-700">低庫存清單</div>
+            <div class="mb-2 text-sm font-medium text-gray-700">低庫存品項</div>
             <div v-if="dashboard.inventory.low_stock_items.length === 0" class="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500">
               目前沒有低庫存或缺貨項目。
             </div>
@@ -207,8 +207,8 @@
                   <tr>
                     <th class="px-4 py-3 text-left font-medium text-gray-500">品項</th>
                     <th class="px-4 py-3 text-left font-medium text-gray-500">倉庫</th>
-                    <th class="px-4 py-3 text-right font-medium text-gray-500">可用</th>
-                    <th class="px-4 py-3 text-right font-medium text-gray-500">安全庫存</th>
+                    <th class="px-4 py-3 text-right font-medium text-gray-500">可用量</th>
+                    <th class="px-4 py-3 text-right font-medium text-gray-500">最低量</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 bg-white">
@@ -217,9 +217,7 @@
                       <div class="font-medium text-gray-800">{{ item.item_name || '-' }}</div>
                       <div class="text-xs text-gray-500">{{ item.item_category || '-' }}</div>
                     </td>
-                    <td class="px-4 py-3 text-gray-700">
-                      {{ item.warehouse_name || '-' }}
-                    </td>
+                    <td class="px-4 py-3 text-gray-700">{{ item.warehouse_name || '-' }}</td>
                     <td class="px-4 py-3 text-right font-medium" :class="item.available_quantity <= 0 ? 'text-rose-600' : 'text-amber-700'">
                       {{ item.available_quantity }}
                     </td>
@@ -235,16 +233,16 @@
           <div class="mb-4 flex items-center justify-between">
             <div>
               <h2 class="text-lg font-semibold text-gray-800">匯出任務</h2>
-              <p class="text-sm text-gray-500">MVP 先追蹤匯出請求，不直接產出檔案。</p>
+              <p class="text-sm text-gray-500">MVP 階段先保留任務紀錄，真正檔案產出後續再接 queue / storage。</p>
             </div>
             <button class="text-sm font-medium text-teal-600 hover:text-teal-700" @click="goExports">
-              進入清單
+              查看清單
             </button>
           </div>
 
           <div class="grid gap-3 sm:grid-cols-2">
             <div class="rounded-xl border border-slate-200 bg-white px-4 py-3">
-              <div class="text-xs uppercase tracking-wide text-slate-400">等待中</div>
+              <div class="text-xs uppercase tracking-wide text-slate-400">排隊中</div>
               <div class="mt-2 text-2xl font-semibold text-slate-800">{{ dashboard.exports.summary.queued }}</div>
             </div>
             <div class="rounded-xl border border-slate-200 bg-white px-4 py-3">
@@ -254,7 +252,7 @@
           </div>
 
           <div class="mt-5">
-            <div class="mb-2 text-sm font-medium text-gray-700">最近紀錄</div>
+            <div class="mb-2 text-sm font-medium text-gray-700">最近任務</div>
             <div v-if="dashboard.exports.recent_records.length === 0" class="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500">
               目前沒有匯出紀錄。
             </div>
@@ -267,9 +265,7 @@
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <div class="font-medium text-gray-800">{{ getReportKeyLabel(record.report_key) }}</div>
-                    <div class="mt-1 text-sm text-gray-500">
-                      {{ record.user_name }} ・ {{ formatDateTime(record.created_at) }}
-                    </div>
+                    <div class="mt-1 text-sm text-gray-500">{{ record.user_name }}，{{ formatDateTime(record.created_at) }}</div>
                   </div>
                   <span
                     class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
@@ -292,18 +288,10 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import LoadingPanel from '@/components/LoadingPanel.vue'
 import { useReport } from '../composables/useReport'
-import {
-  getExportStatusClass,
-  getExportStatusLabel,
-  getReportKeyLabel
-} from '../constants'
+import { getExportStatusClass, getExportStatusLabel, getReportKeyLabel } from '../constants'
 
 const router = useRouter()
-const {
-  dashboard,
-  dashboardLoading,
-  fetchDashboard
-} = useReport()
+const { dashboard, dashboardLoading, fetchDashboard } = useReport()
 
 const rangeDays = ref(30)
 
@@ -326,9 +314,7 @@ const orderStatusItems = computed(() => [
 ])
 
 async function loadDashboard() {
-  await fetchDashboard({
-    range_days: rangeDays.value
-  })
+  await fetchDashboard({ range_days: rangeDays.value })
 }
 
 function goExports() {
@@ -336,7 +322,7 @@ function goExports() {
 }
 
 function formatCurrency(value) {
-  return `${Number(value || 0).toLocaleString()} 元`
+  return `NT$ ${Number(value || 0).toLocaleString()}`
 }
 
 function formatPercent(value) {
@@ -365,7 +351,5 @@ function formatDateTime(value) {
   })
 }
 
-onMounted(async () => {
-  await loadDashboard()
-})
+onMounted(loadDashboard)
 </script>

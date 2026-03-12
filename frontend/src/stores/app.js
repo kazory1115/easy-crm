@@ -7,8 +7,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getModules, getEnabledModules, isModuleEnabled } from '@/config/modules'
+import { useAuthStore } from '@/stores/auth'
 
 export const useAppStore = defineStore('app', () => {
+  const authStore = useAuthStore()
   // ==========================================
   // State
   // ==========================================
@@ -57,7 +59,9 @@ export const useAppStore = defineStore('app', () => {
    * 取得側邊欄選單項目（僅已啟用模組）
    */
   const sidebarMenuItems = computed(() => {
-    return enabledModules.value.map(module => ({
+    return enabledModules.value
+      .filter((module) => !module.permissions || authStore.hasPermission(module.permissions))
+      .map(module => ({
       id: module.id,
       name: module.name,
       icon: module.icon,
@@ -65,7 +69,7 @@ export const useAppStore = defineStore('app', () => {
       badge: module.meta?.badge,
       color: module.meta?.color,
       children: module.children || null
-    }))
+      }))
   })
 
   /**

@@ -1,473 +1,186 @@
-<style scoped>
-table {
-  font-size: 0.9em;
-}
-.alignCenter {
-  text-align: center;
-}
-</style>
-
 <template>
-  <div id="app" class="max-w-7xl mx-auto mt-10">
-    <!-- Header -->
-    <div class="max-w-7x1 mb-6 shadow-lg rounded-2xl border-white/20">
-      <div class="max-w-7xl mx-auto px-6 py-4">
-        <h2
-          class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center"
-        >
-          歷史報價單
-        </h2>
-        <p class="text-gray-600 text-center mt-2">查看和管理已儲存的報價單</p>
-      </div>
-    </div>
-
-    <!-- 報價單列表 -->
-    <div class="app-card p-8">
-      <LoadingPanel v-if="loading" variant="skeleton" />
-      <div v-else-if="quotes.length === 0" class="empty-state">
-        <i class="fa-solid fa-inbox text-6xl mb-4"></i>
-        <p class="text-xl">尚無報價單紀錄</p>
-        <p class="text-sm mt-2">請到「報價管理系統」建立報價單</p>
+  <div class="mx-auto mt-10 max-w-7xl space-y-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800">報價單列表</h1>
+        <p class="mt-2 text-sm text-gray-500">主要輸出流程改為正式 PDF / Excel / Email API，不再依賴臨時 Word 匯出。</p>
       </div>
 
-      <div v-else class="space-y-4">
-        <div
-          v-for="quote in quotes"
-          :key="quote.id"
-          class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
-        >
-          <div class="flex justify-between items-start mb-4">
-            <div class="flex-1">
-              <h3 class="text-xl font-bold text-gray-800 mb-2">
-                <i class="fa-solid fa-file-invoice mr-2 text-blue-600"></i>
-                {{ quote.customer_name || quote.customerName }}
-              </h3>
-              <div class="grid md:grid-cols-2 gap-2 text-sm text-gray-600">
-                <div>
-                  <i class="fa-solid fa-calendar mr-2"></i>
-                  <span>日期：{{ formatDate(quote.quote_date || quote.date) }}</span>
-                </div>
-                <div v-if="quote.quote_number || quote.quotationNumber">
-                  <i class="fa-solid fa-hashtag mr-2"></i>
-                  <span>單號：{{ quote.quote_number || quote.quotationNumber }}</span>
-                </div>
-                <div v-if="quote.contact_phone || quote.contactPhone">
-                  <i class="fa-solid fa-phone mr-2"></i>
-                  <span>電話：{{ quote.contact_phone || quote.contactPhone }}</span>
-                </div>
-                <div>
-                  <i class="fa-solid fa-dollar-sign mr-2"></i>
-                  <span class="font-semibold text-blue-600"
-                    >總金額：{{ (quote.total || 0).toLocaleString() }} 元</span
-                  >
-                </div>
-              </div>
-            </div>
-            <div class="flex gap-2">
-              <button
-                @click="viewQuote(quote)"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                title="查看詳情"
-              >
-                <i class="fa-solid fa-eye"></i>
-              </button>
-              <button
-                @click="editQuote(quote.id)"
-                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                title="編輯"
-              >
-                <i class="fa-solid fa-edit"></i>
-              </button>
-              <button
-                @click="deleteQuoteData(quote.id)"
-                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-                title="刪除"
-              >
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          </div>
-
-          <!-- 項目摘要 -->
-          <div class="mt-4 bg-gray-50 p-4 rounded-lg">
-            <h4 class="text-sm font-semibold text-gray-700 mb-2">
-              項目摘要（共 {{ getQuoteItems(quote).length }} 項）
-            </h4>
-            <div class="text-xs text-gray-600 space-y-1">
-              <div
-                v-for="(item, idx) in getQuoteItems(quote).slice(0, 3)"
-                :key="idx"
-                class="flex justify-between"
-              >
-                <span>{{ idx + 1 }}. {{ getItemName(item.name) }}</span>
-                <span class="font-semibold"
-                  >{{ (item.quantity * item.price).toLocaleString() }} 元</span
-                >
-              </div>
-              <div v-if="getQuoteItems(quote).length > 3" class="text-gray-400 italic">
-                ...還有 {{ getQuoteItems(quote).length - 3 }} 個項目
-              </div>
-            </div>
-          </div>
-
-          <!-- 備註 -->
-          <div v-if="quote.notes" class="mt-4 text-sm">
-            <span class="font-semibold text-gray-700">備註：</span>
-            <span class="text-gray-600">{{ quote.notes }}</span>
-          </div>
-
-          <!-- 時間戳記 -->
-          <div class="mt-4 text-xs text-gray-400">
-            建立時間：{{ formatDateTime(quote.created_at || quote.createdAt) }}
-            <span v-if="(quote.updated_at || quote.updatedAt) !== (quote.created_at || quote.createdAt)" class="ml-4">
-              更新時間：{{ formatDateTime(quote.updated_at || quote.updatedAt) }}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 查看詳情對話框 -->
-    <div
-      v-if="showDetailModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      @click.self="closeDetailModal"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto p-8"
+      <button
+        class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        @click="router.push('/quote/create')"
       >
-        <div class="flex justify-between items-start mb-6">
-          <h3 class="text-2xl font-bold text-gray-800">報價單詳情</h3>
-          <div class="flex items-center gap-2">
-            <button
-              v-if="selectedQuote"
-              @click="downloadSelectedQuote"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-              title="下載 Word"
-            >
-              <i class="fa-solid fa-download mr-2"></i>下載 Word
-            </button>
-            <button
-              @click="closeDetailModal"
-              class="text-gray-400 hover:text-gray-600 text-2xl"
-            >
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-        </div>
+        新增報價單
+      </button>
+    </div>
 
-        <div v-if="selectedQuote">
-          <!-- 基本資訊 -->
-          <div class="grid md:grid-cols-2 gap-6 mb-6">
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-semibold text-gray-700 mb-3">客戶資訊</h4>
-              <div class="space-y-2 text-sm">
-                <div>
-                  <span class="text-gray-600">客戶名稱：</span>
-                  <span class="font-semibold">{{ selectedQuote.customer_name || selectedQuote.customerName }}</span>
-                </div>
-                <div v-if="selectedQuote.contact_phone || selectedQuote.contactPhone">
-                  <span class="text-gray-600">聯絡電話：</span>
-                  <span class="font-semibold">{{ selectedQuote.contact_phone || selectedQuote.contactPhone }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-semibold text-gray-700 mb-3">報價資訊</h4>
-              <div class="space-y-2 text-sm">
-                <div v-if="selectedQuote.quote_number || selectedQuote.quotationNumber">
-                  <span class="text-gray-600">報價單號：</span>
-                  <span class="font-semibold">{{ selectedQuote.quote_number || selectedQuote.quotationNumber }}</span>
-                </div>
-                <div>
-                  <span class="text-gray-600">報價日期：</span>
-                  <span class="font-semibold">{{ formatDate(selectedQuote.quote_date || selectedQuote.date) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 項目表格 -->
-          <div class="mb-6">
-            <h4 class="font-semibold text-gray-700 mb-3">報價項目</h4>
-            <div class="overflow-x-auto rounded-lg border border-gray-200">
-              <table class="w-full min-w-[900px] text-sm">
-                <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
-                  <tr>
-                    <th class="py-3 px-4 text-center font-medium text-gray-700 w-16">
-                      項次
-                    </th>
-                    <th class="py-3 px-4 text-center font-medium text-gray-700">
-                      品名規格
-                    </th>
-                    <th class="py-3 px-4 text-center font-medium text-gray-700 w-24">
-                      數量
-                    </th>
-                    <th class="py-3 px-4 text-center font-medium text-gray-700 w-24">
-                      單位
-                    </th>
-                    <th class="py-3 px-4 text-center font-medium text-gray-700 w-32">
-                      單價
-                    </th>
-                    <th class="py-3 px-4 text-center font-medium text-gray-700 w-32">
-                      複價
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 bg-white">
-                  <tr
-                    v-for="(item, index) in getQuoteItems(selectedQuote)"
-                    :key="index"
-                    class="hover:bg-gray-50 transition-colors"
-                  >
-                    <td class="px-4 py-3 text-center text-gray-600 font-semibold">
-                      {{ index + 1 }}
-                    </td>
-                    <td class="px-4 py-3 text-gray-800" v-html="item.name"></td>
-                    <td class="px-4 py-3 text-center text-gray-600">
-                      {{ item.quantity }}
-                    </td>
-                    <td class="px-4 py-3 text-center text-gray-600">
-                      {{ item.unit }}
-                    </td>
-                    <td class="px-4 py-3 text-right text-gray-600">
-                      {{ item.price.toLocaleString() }}
-                    </td>
-                    <td class="px-4 py-3 text-right text-gray-700 font-semibold">
-                      {{ (item.quantity * item.price).toLocaleString() }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- 總金額 -->
-          <div class="bg-blue-50 p-4 rounded-lg mb-6">
-            <div class="flex justify-between items-center">
-              <span class="text-lg font-semibold text-gray-800">總金額：</span>
-              <span class="text-2xl font-bold text-blue-600"
-                >{{ (selectedQuote.total || 0).toLocaleString() }} 元</span
-              >
-            </div>
-          </div>
-
-          <!-- 備註 -->
-          <div v-if="selectedQuote.notes" class="bg-gray-50 p-4 rounded-lg">
-            <h4 class="font-semibold text-gray-700 mb-2">備註</h4>
-            <p class="text-sm text-gray-600">{{ selectedQuote.notes }}</p>
-          </div>
-        </div>
+    <div class="app-card p-4">
+      <div class="grid gap-3 md:grid-cols-4">
+        <input
+          v-model.trim="filters.search"
+          type="text"
+          placeholder="搜尋客戶、專案或報價單號"
+          class="rounded-lg border px-4 py-2"
+          @input="loadQuotes"
+        />
+        <select v-model="filters.status" class="rounded-lg border px-4 py-2" @change="loadQuotes">
+          <option value="">全部狀態</option>
+          <option value="draft">草稿</option>
+          <option value="sent">已送出</option>
+          <option value="approved">已核准</option>
+          <option value="rejected">已拒絕</option>
+          <option value="expired">已過期</option>
+        </select>
+        <input v-model="filters.start_date" type="date" class="rounded-lg border px-4 py-2" @change="loadQuotes" />
+        <input v-model="filters.end_date" type="date" class="rounded-lg border px-4 py-2" @change="loadQuotes" />
       </div>
     </div>
 
-    <!-- 成功提示 -->
-    <div
-      v-if="showSuccess"
-      class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50"
-    >
-      <i class="fa-solid fa-check-circle mr-2"></i>{{ successMessage }}
+    <LoadingPanel v-if="loading" variant="table" />
+
+    <div v-else-if="quotes.length === 0" class="app-card empty-state">
+      <i class="fa-solid fa-inbox mb-4 text-6xl text-gray-300"></i>
+      <h3 class="mb-2 text-xl font-semibold text-gray-700">目前沒有報價單</h3>
+      <p class="text-sm text-gray-500">你可以先建立一張報價單，之後從明細頁下載 PDF / Excel 或直接寄信。</p>
+    </div>
+
+    <div v-else class="space-y-4">
+      <article
+        v-for="quote in quotes"
+        :key="quote.id"
+        class="app-card p-6"
+      >
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div class="space-y-3">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-800">{{ quote.customer_name }}</h2>
+              <p class="text-sm text-gray-500">{{ quote.project_name || '未填專案名稱' }}</p>
+            </div>
+            <div class="grid gap-2 text-sm text-gray-600 md:grid-cols-2">
+              <div>報價單號：{{ quote.quote_number || '-' }}</div>
+              <div>報價日期：{{ formatDate(quote.quote_date) }}</div>
+              <div>聯絡電話：{{ quote.contact_phone || '-' }}</div>
+              <div>狀態：<span :class="getStatusClass(quote.status)">{{ getStatusLabel(quote.status) }}</span></div>
+            </div>
+          </div>
+
+          <div class="text-right">
+            <div class="text-sm text-gray-500">總計</div>
+            <div class="text-2xl font-bold text-blue-700">{{ formatCurrency(quote.total) }}</div>
+          </div>
+        </div>
+
+        <div class="mt-5 flex flex-wrap gap-2">
+          <button class="rounded-lg bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-800" @click="handleDownloadPdf(quote)">
+            PDF
+          </button>
+          <button class="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700" @click="handleDownloadExcel(quote)">
+            Excel
+          </button>
+          <button class="rounded-lg bg-white px-4 py-2 text-sm text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50" @click="viewQuote(quote.id)">
+            明細
+          </button>
+          <button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700" @click="editQuote(quote.id)">
+            編輯
+          </button>
+          <button class="rounded-lg bg-rose-600 px-4 py-2 text-sm text-white hover:bg-rose-700" @click="deleteQuoteData(quote.id)">
+            刪除
+          </button>
+        </div>
+      </article>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import LoadingPanel from '@/components/LoadingPanel.vue';
-import { useRouter } from 'vue-router';
-import { useQuote } from '../composables/useQuote';
+import { onMounted, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import LoadingPanel from '@/components/LoadingPanel.vue'
+import { useQuote } from '../composables/useQuote'
 
-const router = useRouter();
-const { quotes, loading, error, fetchQuotes, deleteQuote: deleteQuoteApi } = useQuote();
-const selectedQuote = ref(null);
-const showDetailModal = ref(false);
+const router = useRouter()
+const { quotes, loading, fetchQuotes, deleteQuote, downloadQuotePdf, downloadQuoteExcel } = useQuote()
 
-// 成功提示
-const showSuccess = ref(false);
-const successMessage = ref('');
-
-// 載入資料
-onMounted(() => {
-  loadQuotes();
-});
+const filters = reactive({
+  search: '',
+  status: '',
+  start_date: '',
+  end_date: ''
+})
 
 async function loadQuotes() {
-  try {
-    await fetchQuotes({ sort_by: 'created_at', sort_order: 'desc' });
-  } catch (err) {
-    console.error('載入報價單失敗:', err);
+  await fetchQuotes({
+    search: filters.search || undefined,
+    status: filters.status || undefined,
+    start_date: filters.start_date || undefined,
+    end_date: filters.end_date || undefined,
+    sort_by: 'created_at',
+    sort_order: 'desc',
+    per_page: 100
+  })
+}
+
+function formatDate(value) {
+  if (!value) return '-'
+
+  return new Date(value).toLocaleDateString('zh-TW', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+}
+
+function formatCurrency(value) {
+  return `NT$ ${Number(value || 0).toLocaleString()}`
+}
+
+function getStatusLabel(status) {
+  const map = {
+    draft: '草稿',
+    sent: '已送出',
+    approved: '已核准',
+    rejected: '已拒絕',
+    expired: '已過期'
   }
+
+  return map[status] || status || '-'
 }
 
-// 查看報價單詳情
-function viewQuote(quote) {
-  selectedQuote.value = quote;
-  showDetailModal.value = true;
+function getStatusClass(status) {
+  const map = {
+    draft: 'text-slate-600',
+    sent: 'text-blue-600',
+    approved: 'text-emerald-600',
+    rejected: 'text-rose-600',
+    expired: 'text-amber-600'
+  }
+
+  return map[status] || 'text-slate-600'
 }
 
-// 編輯報價單
+function viewQuote(id) {
+  router.push(`/quote/detail/${id}`)
+}
+
 function editQuote(id) {
-  router.push(`/quote/edit/${id}`);
+  router.push(`/quote/edit/${id}`)
 }
 
-// 關閉詳情對話框
-function closeDetailModal() {
-  showDetailModal.value = false;
-  selectedQuote.value = null;
+async function handleDownloadPdf(quote) {
+  await downloadQuotePdf(quote.id, `${quote.quote_number || `quote_${quote.id}`}.pdf`)
 }
 
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
+async function handleDownloadExcel(quote) {
+  await downloadQuoteExcel(quote.id, `${quote.quote_number || `quote_${quote.id}`}.xlsx`)
 }
 
-function generateQuoteHtml(quote) {
-  const customerName = quote.customer_name || quote.customerName || '';
-  const quoteNumber = quote.quote_number || quote.quotationNumber || '';
-  const quoteDate = quote.quote_date || quote.date || '';
-  const contactPhone = quote.contact_phone || quote.contactPhone || '';
-  const notes = quote.notes || '';
-  const items = Array.isArray(quote.items) ? quote.items : [];
-
-  const total = items.reduce((sum, item) => {
-    const quantity = Number(item.quantity) || 0;
-    const price = Number(item.price) || 0;
-    return sum + quantity * price;
-  }, 0);
-
-  const itemsHtml = items.map((item, index) => {
-    const quantity = Number(item.quantity) || 0;
-    const price = Number(item.price) || 0;
-    const subtotal = quantity * price;
-    return `
-      <tr>
-        <td class="alignCenter">${index + 1}</td>
-        <td>${item.name || ''}</td>
-        <td style="text-align: right;">${quantity}</td>
-        <td class="alignCenter">${escapeHtml(item.unit || '')}</td>
-        <td style="text-align: right;">${price.toLocaleString()}</td>
-        <td style="text-align: right;">${subtotal.toLocaleString()}</td>
-      </tr>
-    `;
-  }).join('');
-
-  return `
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <style>
-        body { font-family: sans-serif; }
-        table { border-collapse: collapse; width: 100%; font-size: 12px; }
-        th, td { border: 1px solid #ccc; padding: 8px; }
-        th { background-color: #f2f2f2; text-align: center; }
-        .alignCenter { text-align: center; }
-        .header { text-align: center; margin-bottom: 20px; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h2>報價單</h2>
-        <p><strong>客戶名稱:</strong> ${escapeHtml(customerName)}</p>
-        <p><strong>報價單號:</strong> ${escapeHtml(quoteNumber)} &nbsp;&nbsp; <strong>日期:</strong> ${escapeHtml(quoteDate)}</p>
-        <p><strong>聯絡電話:</strong> ${escapeHtml(contactPhone)}</p>
-      </div>
-      <table>
-        <tr>
-          <th style="width: 5%">項次</th>
-          <th style="width: 40%">項目名稱</th>
-          <th style="width: 10%">數量</th>
-          <th style="width: 10%">單位</th>
-          <th style="width: 15%">單價</th>
-          <th style="width: 20%">小計</th>
-        </tr>
-        ${itemsHtml}
-      </table>
-      <p style="text-align: right; margin-top: 10px;"><strong>總金額:</strong> ${total.toLocaleString()} 元</p>
-      <div style="margin-top: 20px;">
-        <strong>備註:</strong>
-        <p style="white-space: pre-wrap;">${escapeHtml(notes)}</p>
-      </div>
-    </body>
-    </html>
-  `;
-}
-
-function downloadSelectedQuote() {
-  if (!selectedQuote.value) return;
-
-  const content = generateQuoteHtml(selectedQuote.value);
-  const blob = new Blob(['\ufeff' + content], { type: 'application/msword' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-
-  const customer = (selectedQuote.value.customer_name || selectedQuote.value.customerName || '報價單')
-    .replace(/[\\/:*?"<>|]/g, '_');
-  link.download = `${customer}-報價單.doc`;
-  link.click();
-
-  URL.revokeObjectURL(link.href);
-}
-
-// 刪除報價單
 async function deleteQuoteData(id) {
-  if (confirm('確定要刪除此報價單嗎？此操作無法復原。')) {
-    try {
-      await deleteQuoteApi(id);
-      await loadQuotes();
-      showSuccessMessage('報價單已刪除！');
-    } catch (err) {
-      console.error('刪除報價單失敗:', err);
-    }
-  }
+  const confirmed = window.confirm('確定要刪除這張報價單？')
+  if (!confirmed) return
+
+  await deleteQuote(id)
+  await loadQuotes()
 }
 
-// 格式化日期
-function formatDate(dateString) {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('zh-TW', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-}
-
-// 格式化日期時間
-function formatDateTime(dateString) {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleString('zh-TW', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-// 取得項目名稱（移除 HTML 標籤）
-function getItemName(name) {
-  if (!name) return '';
-  // 移除 HTML 標籤，只保留文字
-  const div = document.createElement('div');
-  div.innerHTML = name;
-  return div.textContent || div.innerText || name;
-}
-
-function getQuoteItems(quote) {
-  return Array.isArray(quote?.items) ? quote.items : [];
-}
-
-// 成功提示
-function showSuccessMessage(message) {
-  successMessage.value = message;
-  showSuccess.value = true;
-  setTimeout(() => {
-    showSuccess.value = false;
-  }, 2000);
-}
+onMounted(loadQuotes)
 </script>

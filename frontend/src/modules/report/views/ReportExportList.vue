@@ -1,18 +1,15 @@
 <template>
-  <div class="report-export-list space-y-6">
+  <div class="space-y-6">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-800">匯出紀錄</h1>
         <p class="mt-1 text-sm text-gray-500">
-          MVP 版本只建立匯出任務紀錄，後續再接背景工作與實體檔案。
+          先把匯出請求與狀態留痕，後續要接 queue、storage、真正檔案下載時不需要重做 UI。
         </p>
       </div>
 
       <div class="flex flex-wrap gap-3">
-        <button
-          class="rounded-lg border px-4 py-2 hover:bg-gray-50"
-          @click="goDashboard"
-        >
+        <button class="rounded-lg border px-4 py-2 hover:bg-gray-50" @click="goDashboard">
           返回 Dashboard
         </button>
         <button
@@ -35,7 +32,7 @@
     </div>
 
     <div class="rounded-2xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-800">
-      目前只記錄匯出請求與篩選條件，不會立即下載檔案。這樣做的目的是先把任務流與歷史追蹤定型，後續再接 queue / storage。
+      現階段只建立匯出任務紀錄，不真的產出檔案。這是刻意保留的 MVP 範圍，先把流程與資料結構站穩。
     </div>
 
     <div class="app-card p-4">
@@ -43,7 +40,7 @@
         <input
           v-model.trim="filters.search"
           type="text"
-          placeholder="搜尋報表類型、建立者、檔案路徑"
+          placeholder="搜尋報表類型、建立者或檔案路徑"
           class="rounded-lg border px-4 py-2 focus:ring-2 focus:ring-teal-500"
           @input="handleSearchInput"
         />
@@ -81,11 +78,8 @@
           </option>
         </select>
 
-        <button
-          class="rounded-lg border px-4 py-2 hover:bg-gray-50"
-          @click="resetFilters"
-        >
-          重置篩選
+        <button class="rounded-lg border px-4 py-2 hover:bg-gray-50" @click="resetFilters">
+          重設篩選
         </button>
       </div>
     </div>
@@ -94,11 +88,9 @@
       <LoadingPanel v-if="exportLoading" variant="table" />
 
       <div v-else-if="exportRecords.length === 0" class="empty-state">
-        <i class="fa-solid fa-folder text-6xl text-gray-300 mb-4"></i>
+        <i class="fa-solid fa-folder-open mb-4 text-6xl text-gray-300"></i>
         <h3 class="mb-2 text-xl font-semibold text-gray-700">目前沒有匯出紀錄</h3>
-        <p class="mb-5 text-sm text-gray-500">
-          可以先建立第一筆匯出任務，或調整篩選條件再試一次。
-        </p>
+        <p class="mb-5 text-sm text-gray-500">你可以先建立一筆匯出任務，之後這裡會成為下載與追蹤狀態的入口。</p>
         <button
           v-if="canRequestExport"
           class="rounded-lg bg-teal-600 px-4 py-2 text-white hover:bg-teal-700"
@@ -178,7 +170,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import LoadingPanel from '@/components/LoadingPanel.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -307,7 +299,9 @@ function formatFilters(filtersValue) {
     .join(' / ')
 }
 
-onMounted(async () => {
-  await loadRecords()
+onMounted(loadRecords)
+
+onBeforeUnmount(() => {
+  clearTimeout(searchTimer)
 })
 </script>

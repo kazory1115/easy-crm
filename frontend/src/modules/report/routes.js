@@ -1,7 +1,3 @@
-/**
- * 報表中心模組路由配置
- */
-
 export default [
   {
     path: '/report',
@@ -19,12 +15,12 @@ export default [
         name: 'ReportDashboard',
         component: () => import('./views/ReportDashboard.vue'),
         meta: {
-          title: '報表總覽',
+          title: '報表儀表板',
           permissions: ['report.view'],
           breadcrumb: [
             { name: '首頁', path: '/' },
             { name: '報表中心', path: '/report' },
-            { name: '報表總覽' }
+            { name: '報表儀表板' }
           ]
         }
       },
@@ -44,4 +40,4 @@ export default [
       }
     ]
   }
-];
+]

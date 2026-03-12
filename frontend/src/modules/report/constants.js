@@ -3,11 +3,11 @@ export const REPORT_KEY_OPTIONS = [
   { value: 'order_summary', label: '訂單摘要' },
   { value: 'sales_summary', label: '銷售摘要' },
   { value: 'inventory_snapshot', label: '庫存快照' },
-  { value: 'inventory_status', label: '庫存現況' }
+  { value: 'inventory_status', label: '庫存狀態' }
 ]
 
 export const EXPORT_STATUS_OPTIONS = [
-  { value: 'queued', label: '等待中' },
+  { value: 'queued', label: '排隊中' },
   { value: 'processing', label: '處理中' },
   { value: 'done', label: '已完成' },
   { value: 'failed', label: '失敗' }
@@ -19,17 +19,9 @@ export const EXPORT_FORMAT_OPTIONS = [
   { value: 'pdf', label: 'PDF' }
 ]
 
-const REPORT_KEY_LABEL_MAP = Object.fromEntries(
-  REPORT_KEY_OPTIONS.map((item) => [item.value, item.label])
-)
-
-const EXPORT_STATUS_LABEL_MAP = Object.fromEntries(
-  EXPORT_STATUS_OPTIONS.map((item) => [item.value, item.label])
-)
-
-const EXPORT_FORMAT_LABEL_MAP = Object.fromEntries(
-  EXPORT_FORMAT_OPTIONS.map((item) => [item.value, item.label])
-)
+const REPORT_KEY_LABEL_MAP = Object.fromEntries(REPORT_KEY_OPTIONS.map((item) => [item.value, item.label]))
+const EXPORT_STATUS_LABEL_MAP = Object.fromEntries(EXPORT_STATUS_OPTIONS.map((item) => [item.value, item.label]))
+const EXPORT_FORMAT_LABEL_MAP = Object.fromEntries(EXPORT_FORMAT_OPTIONS.map((item) => [item.value, item.label]))
 
 const EXPORT_STATUS_CLASS_MAP = {
   queued: 'bg-amber-100 text-amber-800',

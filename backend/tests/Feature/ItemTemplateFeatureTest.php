@@ -16,7 +16,7 @@ class ItemTemplateFeatureTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
+        $this->user = $this->createUserWithAccess(['admin']);
         Sanctum::actingAs($this->user);
     }
 
@@ -107,4 +107,3 @@ class ItemTemplateFeatureTest extends TestCase
             ->assertJsonCount(2);
     }
 }
-

@@ -1,23 +1,30 @@
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import path from 'path';
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
   server: {
-    allowedHosts: ['25ba2484bb2d.ngrok-free.app'],
+    allowedHosts: ["25ba2484bb2d.ngrok-free.app"],
     proxy: {
-      '/api': {
-        target: 'http://localhost:8180',
+      "/api": {
+        target: "http://localhost:8180",
         changeOrigin: true,
       },
     },
   },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./src/tests/setup.js",
+    css: false,
+    restoreMocks: true,
+    clearMocks: true,
+  },
 });
-

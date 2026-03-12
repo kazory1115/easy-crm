@@ -26,6 +26,12 @@ class RoleAndPermissionSeeder extends Seeder
             'quote.template.manage',
             'quote.item.manage',
 
+            // Order
+            'order.view',
+            'order.create',
+            'order.edit',
+            'order.delete',
+
             // Staff / Role
             'staff.view',
             'staff.create',
@@ -67,6 +73,7 @@ class RoleAndPermissionSeeder extends Seeder
 
         $manager->syncPermissions([
             'quote.view', 'quote.create', 'quote.edit', 'quote.template.manage', 'quote.item.manage',
+            'order.view', 'order.create', 'order.edit',
             'crm.view', 'crm.create', 'crm.edit',
             'inventory.view', 'inventory.create', 'inventory.edit',
             'report.view',
@@ -75,6 +82,7 @@ class RoleAndPermissionSeeder extends Seeder
 
         $staff->syncPermissions([
             'quote.view', 'quote.create',
+            'order.view',
             'crm.view',
             'inventory.view',
             'report.view'

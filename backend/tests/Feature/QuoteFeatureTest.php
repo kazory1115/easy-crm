@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Mail\QuoteMail;
 use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -16,7 +18,7 @@ class QuoteFeatureTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
+        $this->user = $this->createUserWithAccess(['admin']);
     }
 
     private function quotePayload(array $overrides = []): array
@@ -31,10 +33,10 @@ class QuoteFeatureTest extends TestCase
             'items' => [
                 [
                     'type' => 'input',
-                    'name' => '測試項目',
+                    'name' => '測試品項',
                     'description' => '測試描述',
                     'quantity' => 2,
-                    'unit' => '式',
+                    'unit' => '組',
                     'price' => 100,
                 ],
             ],
@@ -55,9 +57,8 @@ class QuoteFeatureTest extends TestCase
             'updated_by' => $this->user->id,
         ]);
 
-        $response = $this->getJson('/api/quotes');
-
-        $response->assertOk()
+        $this->getJson('/api/quotes')
+            ->assertOk()
             ->assertJsonStructure(['data', 'current_page', 'last_page', 'total'])
             ->assertJsonPath('total', 2);
     }
@@ -66,9 +67,8 @@ class QuoteFeatureTest extends TestCase
     {
         Sanctum::actingAs($this->user);
 
-        $response = $this->postJson('/api/quotes', $this->quotePayload());
-
-        $response->assertCreated()
+        $this->postJson('/api/quotes', $this->quotePayload())
+            ->assertCreated()
             ->assertJsonPath('message', '報價單建立成功')
             ->assertJsonPath('data.customer_name', '測試客戶');
 
@@ -91,9 +91,9 @@ class QuoteFeatureTest extends TestCase
         QuoteItem::create([
             'quote_id' => $quote->id,
             'type' => 'input',
-            'name' => '舊項目',
+            'name' => '舊品項',
             'quantity' => 1,
-            'unit' => '式',
+            'unit' => '組',
             'price' => 50,
             'sort_order' => 1,
         ]);
@@ -103,17 +103,16 @@ class QuoteFeatureTest extends TestCase
             'items' => [
                 [
                     'type' => 'input',
-                    'name' => '更新後項目',
+                    'name' => '更新後品項',
                     'quantity' => 3,
-                    'unit' => '式',
+                    'unit' => '組',
                     'price' => 200,
                 ],
             ],
         ]);
 
-        $response = $this->putJson("/api/quotes/{$quote->id}", $payload);
-
-        $response->assertOk()
+        $this->putJson("/api/quotes/{$quote->id}", $payload)
+            ->assertOk()
             ->assertJsonPath('message', '報價單更新成功')
             ->assertJsonPath('data.customer_name', '更新後客戶');
 
@@ -135,7 +134,7 @@ class QuoteFeatureTest extends TestCase
 
         $this->deleteJson("/api/quotes/{$quote->id}")
             ->assertOk()
-            ->assertJsonPath('message', '報價單刪除成功');
+            ->assertJsonPath('message', '報價單已刪除');
 
         $this->assertSoftDeleted('quotes', ['id' => $quote->id]);
     }
@@ -149,11 +148,9 @@ class QuoteFeatureTest extends TestCase
             'updated_by' => $this->user->id,
         ]);
 
-        $response = $this->patchJson("/api/quotes/{$quote->id}/status", [
+        $this->patchJson("/api/quotes/{$quote->id}/status", [
             'status' => 'approved',
-        ]);
-
-        $response->assertOk()
+        ])->assertOk()
             ->assertJsonPath('message', '狀態更新成功')
             ->assertJsonPath('data.status', 'approved');
 
@@ -162,5 +159,72 @@ class QuoteFeatureTest extends TestCase
             'status' => 'approved',
         ]);
     }
-}
 
+    public function test_can_download_quote_pdf_and_excel(): void
+    {
+        Sanctum::actingAs($this->user);
+
+        $quote = Quote::factory()->create([
+            'customer_name' => '下載客戶',
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+        ]);
+
+        QuoteItem::create([
+            'quote_id' => $quote->id,
+            'type' => 'input',
+            'name' => '下載品項',
+            'quantity' => 2,
+            'unit' => '組',
+            'price' => 1200,
+            'sort_order' => 1,
+        ]);
+
+        $this->get("/api/quotes/{$quote->id}/pdf")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+
+        $this->get("/api/quotes/{$quote->id}/excel")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
+    public function test_can_send_quote_email(): void
+    {
+        Sanctum::actingAs($this->user);
+        Mail::fake();
+
+        $quote = Quote::factory()->draft()->create([
+            'contact_email' => 'original@example.com',
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+        ]);
+
+        QuoteItem::create([
+            'quote_id' => $quote->id,
+            'type' => 'input',
+            'name' => '寄信品項',
+            'quantity' => 1,
+            'unit' => '組',
+            'price' => 500,
+            'sort_order' => 1,
+        ]);
+
+        $this->postJson("/api/quotes/{$quote->id}/send", [
+            'email' => 'receiver@example.com',
+            'subject' => '正式報價單',
+            'message' => '請查收附件',
+        ])->assertOk()
+            ->assertJsonPath('message', '報價單已寄出')
+            ->assertJsonPath('data.status', 'sent');
+
+        Mail::assertSent(QuoteMail::class, function (QuoteMail $mail): bool {
+            return $mail->hasTo('receiver@example.com');
+        });
+
+        $this->assertDatabaseHas('quotes', [
+            'id' => $quote->id,
+            'status' => 'sent',
+        ]);
+    }
+}
